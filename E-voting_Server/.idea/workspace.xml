@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="406020b1-38a2-44c3-aadb-78551a017642" name="Changes" comment="&quot;Initial commit: Secure E-Voting System&quot;">
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/Backend/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Backend/config/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/Backend/controller/DataAdminController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Backend/controller/DataAdminController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/Backend/model/Candidate.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Backend/model/Candidate.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/Backend/model/Vote.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Backend/model/Vote.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/Backend/model/Voter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Backend/model/Voter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/Backend/model/Ward.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/Backend/service/NfcVotingService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Backend/service/NfcVotingService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/Admin.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/Admin.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/Backend/EvotingBackendApplication.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/Backend/EvotingBackendApplication.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/Backend/blockchain/Block.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/Backend/blockchain/Block.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/Backend/blockchain/Blockchain.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/Backend/blockchain/Blockchain.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/Backend/config/SecurityConfig.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/Backend/config/SecurityConfig.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/Backend/controller/DataAdminController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/Backend/controller/DataAdminController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/Backend/model/Candidate.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/Backend/model/Candidate.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/Backend/model/Constituency.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/Backend/model/Constituency.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/Backend/model/Election.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/Backend/model/Election.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/Backend/model/ElectionConfig.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/Backend/model/ElectionConfig.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/Backend/model/Vote.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/Backend/model/Vote.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/Backend/model/VoteRequest.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/Backend/model/VoteRequest.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/Backend/model/Voter.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/Backend/model/Voter.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/Backend/model/VotingSession.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/Backend/model/VotingSession.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/Backend/model/Ward.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/Backend/repository/CandidateRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/Backend/repository/CandidateRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/Backend/repository/ConstituencyRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/Backend/repository/ConstituencyRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/Backend/repository/ElectionConfigRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/Backend/repository/ElectionConfigRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/Backend/repository/ElectionRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/Backend/repository/ElectionRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/Backend/repository/VoteRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/Backend/repository/VoteRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/Backend/repository/VoterRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/Backend/repository/VoterRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/Backend/repository/VotingSessionRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/Backend/repository/VotingSessionRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/Backend/service/ElectionResultsService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/Backend/service/ElectionResultsService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/Backend/service/NfcVotingService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/Backend/service/NfcVotingService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/Backend/service/VoteService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/Backend/service/VoteService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/static/Admin.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/static/Admin.html" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="HTML File" />
+        <option value="Interface" />
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Balavigneshcse&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Balavigneshcse/E-Voting.git&quot;,
+    &quot;accountId&quot;: &quot;a6c6a96a-bb3e-4e53-b9e3-dea8f4b44b3f&quot;
+  }
+}</component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHomeTypeForPersistence" value="WRAPPER" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
+  <component name="ProjectId" id="3AWGwKW6v194Nlak8DwiIDcj80Y" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;Spring Boot.EvotingBackendApplication.executor&quot;: &quot;Run&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/Studyies/Indian Inavation/Project/E-voting/pom.xml&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;org.jetbrains.plugins.github.ui.GithubSettingsConfigurable&quot;
+  },
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;postgresql&quot;
+    ]
+  }
+}</component>
+  <component name="RunManager">
+    <configuration default="true" type="JetRunConfigurationType">
+      <module name="E-voting" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-2fc7cc6b9a17-intellij.indexing.shared.core-IU-253.32098.37" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="406020b1-38a2-44c3-aadb-78551a017642" name="Changes" comment="" />
+      <created>1772701150093</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1772701150093</updated>
+    </task>
+    <task id="LOCAL-00001" summary="&quot;Initial commit: Secure E-Voting System&quot;">
+      <option name="closed" value="true" />
+      <created>1772908138633</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1772908138633</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="&quot;Initial commit: Secure E-Voting System&quot;" />
+    <option name="LAST_COMMIT_MESSAGE" value="&quot;Initial commit: Secure E-Voting System&quot;" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
+  </component>
+</project>

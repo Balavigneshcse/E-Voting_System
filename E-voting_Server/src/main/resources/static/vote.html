@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cast Your Vote — E-Voting</title>
+    <style>
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+        :root{--blue:#1a3c6e;--blue-lt:#2457a0;--orange:#e67e22;--green:#27ae60;--red:#e74c3c;--gray:#f4f6f9;--text:#1c1c1e;--muted:#6b7280;--border:#d1d5db;--white:#ffffff;--radius:12px;}
+        body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--gray);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px;}
+        .header{text-align:center;margin-bottom:24px;padding-top:8px;}
+        .header h1{font-size:22px;font-weight:700;color:var(--blue);}
+        .header p{font-size:13px;color:var(--muted);margin-top:3px;}
+        .steps{display:flex;gap:0;margin-bottom:24px;background:var(--white);border-radius:40px;padding:6px;border:1px solid var(--border);}
+        .step{padding:8px 20px;border-radius:30px;font-size:13px;font-weight:500;color:var(--muted);display:flex;align-items:center;gap:8px;}
+        .step.done{color:var(--green);}
+        .step.active{background:var(--blue);color:var(--white);}
+        .step .num{width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
+        .step:not(.active) .num{background:var(--border);color:var(--text);}
+        .step.done .num{background:var(--green);color:var(--white);}
+
+        .card{background:var(--white);border-radius:var(--radius);padding:32px;width:100%;max-width:560px;border:1px solid var(--border);}
+        .card h2{font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px;}
+        .card .sub{font-size:14px;color:var(--muted);margin-bottom:24px;}
+
+        .timer-bar{background:#fef9ec;border:1px solid #fed7aa;border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
+        .timer-bar .label{font-size:13px;color:var(--muted);}
+        .timer-bar .time{font-size:15px;font-weight:700;color:var(--orange);}
+        .timer-bar .time.urgent{color:var(--red);}
+
+        .candidates{display:flex;flex-direction:column;gap:12px;margin-bottom:24px;}
+        .candidate-card{
+          border:2px solid var(--border); border-radius:10px;
+          padding:16px 18px; cursor:pointer;
+          display:flex; align-items:center; gap:14px;
+          transition:all .2s; background:var(--white);
+        }
+        .candidate-card:hover{border-color:var(--blue-lt);background:#f8faff;}
+        .candidate-card.selected{border-color:var(--blue);background:#eff6ff;}
+        .candidate-card input[type=radio]{width:18px;height:18px;accent-color:var(--blue);flex-shrink:0;}
+        .candidate-info .name{font-size:16px;font-weight:600;color:var(--text);}
+        .candidate-info .party{font-size:13px;color:var(--muted);margin-top:2px;}
+        .candidate-avatar{width:52px;height:52px;border-radius:50%;background:var(--blue);color:var(--white);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0;margin-left:auto;overflow:hidden;}
+        .candidate-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+        .party-symbol{width:36px;height:36px;border-radius:6px;object-fit:contain;margin-left:8px;flex-shrink:0;border:1px solid var(--border);}
+        .party-color-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px;}
+
+        .btn{width:100%;padding:14px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;transition:background .2s;}
+        .btn:hover{background:var(--blue-lt);}
+        .btn:disabled{background:var(--border);cursor:not-allowed;}
+
+        .confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);align-items:center;justify-content:center;z-index:100;}
+        .confirm-overlay.show{display:flex;}
+        .confirm-box{background:var(--white);border-radius:var(--radius);padding:36px;max-width:400px;width:90%;text-align:center;}
+        .confirm-box h3{font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px;}
+        .confirm-box p{font-size:14px;color:var(--muted);margin-bottom:8px;}
+        .confirm-box .choice{font-size:18px;font-weight:700;color:var(--blue);margin:12px 0 20px;}
+        .confirm-btns{display:flex;gap:12px;}
+        .confirm-btns .cancel{flex:1;padding:12px;background:var(--gray);border:1px solid var(--border);border-radius:8px;font-size:15px;cursor:pointer;}
+        .confirm-btns .confirm{flex:1;padding:12px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;}
+
+        .alert{padding:12px 14px;border-radius:8px;font-size:14px;margin-top:14px;display:none;}
+        .alert.error{background:#fef2f2;color:var(--red);border:1px solid #fecaca;}
+        .alert.show{display:block;}
+
+        .loading{text-align:center;padding:40px;color:var(--muted);font-size:15px;}
+        .voter-info-card{background:#f8faff;border:1px solid #bfdbfe;border-radius:10px;padding:16px 18px;margin-bottom:20px;display:flex;gap:20px;flex-wrap:wrap;}
+        .voter-info-card .vi-item{min-width:120px;}
+        .voter-info-card .vi-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+        .voter-info-card .vi-value{font-size:14px;font-weight:600;color:var(--text);margin-top:2px;}
+        .lang-banner{display:flex;align-items:center;gap:8px;padding:8px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;margin-bottom:14px;font-size:13px;color:#14532d;}
+        .ta-label{font-size:12px;color:var(--muted);display:block;margin-top:2px;}
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600&family=Noto+Sans+Devanagari:wght@400;600&display=swap');
+        .ta-text{font-family:'Noto Sans Tamil',sans-serif;}
+        .election-banner{width:100%;max-width:560px;border-radius:10px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
+        .election-banner.pm  {background:#fef3c7;border:1px solid #fcd34d;}
+        .election-banner.cm  {background:#ede9fe;border:1px solid #c4b5fd;}
+        .election-banner.ward{background:#dcfce7;border:1px solid #86efac;}
+        .election-banner .elec-title{font-size:16px;font-weight:700;}
+        .election-banner.pm   .elec-title{color:#92400e;}
+        .election-banner.cm   .elec-title{color:#4c1d95;}
+        .election-banner.ward .elec-title{color:#14532d;}
+        .election-banner .elec-sub{font-size:12px;margin-top:2px;}
+        .election-banner.pm   .elec-sub{color:#b45309;}
+        .election-banner.cm   .elec-sub{color:#6d28d9;}
+        .election-banner.ward .elec-sub{color:#15803d;}
+        .type-pill{font-size:12px;font-weight:800;padding:4px 12px;border-radius:20px;letter-spacing:.5px;}
+        .pm   .type-pill{background:#fcd34d;color:#78350f;}
+        .cm   .type-pill{background:#c4b5fd;color:#3b0764;}
+        .ward .type-pill{background:#86efac;color:#14532d;}
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Secure E-Voting System</h1>
+    <p>State Election Commission — Blockchain Secured</p>
+</div>
+
+<div class="steps">
+    <div class="step done"><span class="num">&#10003;</span> Identity</div>
+    <div class="step done"><span class="num">&#10003;</span> Biometric</div>
+    <div class="step active"><span class="num">3</span> Vote</div>
+</div>
+
+<!-- Election banner shown above the card -->
+<div class="election-banner" id="electionBanner">
+    <div>
+        <div class="elec-title" id="elecTitle">Loading election...</div>
+        <div class="elec-sub" id="elecSub">Please wait</div>
+    </div>
+    <span class="type-pill" id="typePill"></span>
+</div>
+
+<div class="card">
+    <h2>Cast Your Vote</h2>
+    <p class="sub">Your vote is final and cannot be changed.</p>
+
+    <div class="voter-info-card" id="voterInfoCard" style="display:none;">
+        <div class="vi-item"><div class="vi-label">Voter ID</div><div class="vi-value" id="viId">-</div></div>
+        <div class="vi-item"><div class="vi-label">Name</div><div class="vi-value" id="viName">-</div></div>
+        <div class="vi-item"><div class="vi-label">Ward</div><div class="vi-value" id="viWard">-</div></div>
+        <div class="vi-item"><div class="vi-label">Panchayat</div><div class="vi-value" id="viPanchayat">-</div></div>
+        <div class="vi-item"><div class="vi-label">Council</div><div class="vi-value" id="viCouncil">-</div></div>
+        <div class="vi-item"><div class="vi-label">CM Constituency</div><div class="vi-value" id="viVs">-</div></div>
+        <div class="vi-item"><div class="vi-label">PM Constituency</div><div class="vi-value" id="viLs">-</div></div>
+        <div class="vi-item"><div class="vi-label">District</div><div class="vi-value" id="viDistrict">-</div></div>
+        <div class="vi-item"><div class="vi-label">State</div><div class="vi-value" id="viState">-</div></div>
+    </div>
+
+    <div class="timer-bar">
+        <span class="label">Session expires in</span>
+        <span class="time" id="timerDisplay">2:00</span>
+    </div>
+
+    <div class="lang-banner" id="langBanner" style="display:none;">Displaying in: <strong id="langLabel"></strong></div>
+    <div class="candidates" id="candidatesContainer">
+        <div class="loading">Loading candidates…</div>
+    </div>
+
+    <button class="btn" id="voteBtn" onclick="showConfirm()" disabled>Select a candidate to continue</button>
+    <div class="alert error" id="errorMsg"></div>
+</div>
+
+<!-- Confirmation dialog -->
+<div class="confirm-overlay" id="confirmOverlay">
+    <div class="confirm-box">
+        <h3>Confirm Your Vote</h3>
+        <p>You are about to vote for:</p>
+        <div class="choice" id="confirmName"></div>
+        <p style="font-size:13px;color:#e74c3c;">This action is permanent and cannot be undone.</p>
+        <div class="confirm-btns" style="margin-top:20px;">
+            <button class="cancel" onclick="closeConfirm()">Cancel</button>
+            <button class="confirm" onclick="castVote()">Confirm Vote</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const token        = sessionStorage.getItem('sessionToken');
+    const electionName = sessionStorage.getItem('electionName') || 'Election';
+    const electionType = (sessionStorage.getItem('electionType') || 'CM').toUpperCase();
+    if (!token) { window.location.href = '/index.html'; }
+
+    // Set up election banner
+    const banner = document.getElementById('electionBanner');
+    const tc = electionType.toLowerCase();
+    banner.classList.add(tc);
+    document.getElementById('elecTitle').textContent = electionName;
+    document.getElementById('typePill').textContent  = electionType;
+
+    const subMap = {
+      PM:   'Prime Minister Election — All constituencies vote',
+      CM:   'Chief Minister Election — Your constituency candidates',
+      WARD: 'Ward Member Election — Your ward candidates'
+    };
+    document.getElementById('elecSub').textContent = subMap[electionType] || electionName;
+    let selectedCandidateId   = null;
+    let selectedCandidateName = null;
+    let timerSeconds = 120;
+    let timerInterval;
+
+    // Countdown timer
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        timerSeconds--;
+        const m = Math.floor(timerSeconds / 60);
+        const s = timerSeconds % 60;
+        const el = document.getElementById('timerDisplay');
+        el.textContent = `${m}:${String(s).padStart(2,'0')}`;
+        if (timerSeconds <= 30) el.classList.add('urgent');
+        if (timerSeconds <= 0) {
+          clearInterval(timerInterval);
+          alert('Session expired. Please restart the voting process.');
+          sessionStorage.clear();
+          window.location.href = '/index.html';
+        }
+      }, 1000);
+    }
+
+    // Load candidates
+    let currentLang = 'EN';
+    const voterIdForDetail = sessionStorage.getItem('voterId') || '';
+
+    async function loadVoterDetails() {
+      if (!voterIdForDetail) return;
+      try {
+        const res  = await fetch('/voter/detail/' + voterIdForDetail);
+        const data = await res.json();
+        if (data.found) {
+          document.getElementById('voterInfoCard').style.display = 'flex';
+          document.getElementById('viId').textContent        = data.voter_id        || '-';
+          document.getElementById('viName').textContent      = data.voter_name      || '-';
+          document.getElementById('viWard').textContent      = data.ward            || '-';
+          document.getElementById('viPanchayat').textContent = data.panchayat       || '-';
+          document.getElementById('viCouncil').textContent   = data.council         || '-';
+          document.getElementById('viVs').textContent        = data.cm_constituency || '-';
+          document.getElementById('viLs').textContent        = data.pm_constituency || '-';
+          document.getElementById('viDistrict').textContent  = data.district        || '-';
+          document.getElementById('viState').textContent     = data.state           || '-';
+        }
+      } catch(e) {}
+    }
+
+
+    async function loadLanguage() {
+      try {
+        const r = await fetch('/settings/language');
+        const d = await r.json();
+        currentLang = d.language || 'EN';
+        const langMap = { EN_TA: {code:'TA', label:'English + Tamil', font:'Noto Sans Tamil'},
+                          EN_HI: {code:'HI', label:'English + Hindi',  font:'Noto Sans Devanagari'} };
+        const cfg = langMap[currentLang];
+        if (cfg) {
+          document.getElementById('langBanner').style.display = 'flex';
+          document.getElementById('langLabel').textContent = cfg.label;
+          const trans = await fetch('/translations/' + cfg.code).then(r=>r.json());
+          const tMap = {};
+          trans.forEach(t => { tMap[t.key] = t.value; });
+          const elType = sessionStorage.getItem('electionType') || 'CM';
+          if (tMap['election.' + elType]) {
+            document.getElementById('elecName').innerHTML =
+              electionName + '<br><span class="sec-lang" style="font-size:13px;color:var(--muted);">' + tMap['election.' + elType] + '</span>';
+          }
+          if (tMap['vote.final']) {
+            document.querySelector('.sub').innerHTML =
+              'Your vote is final and cannot be changed.<br><span class="sec-lang" style="font-size:12px;">' + tMap['vote.final'] + '</span>';
+          }
+        }
+      } catch(e) {}
+    }
+
+    async function loadCandidates() {
+      try {
+        const res  = await fetch('/nfc/candidates?sessionToken=' + token);
+        const list = await res.json();
+        const container = document.getElementById('candidatesContainer');
+        container.innerHTML = '';
+
+        if (!list || list.length === 0) {
+          container.innerHTML = '<div class="loading">No candidates found for your constituency.</div>';
+          return;
+        }
+
+        list.forEach(c => {
+          const card = document.createElement('label');
+          card.className = 'candidate-card';
+          const showTa = currentLang === 'EN_TA';
+          const nameHtml = c.name + (showTa && c.nameTa ? '<span class="ta-label ta-text">' + c.nameTa + '</span>' : '');
+          const partyHtml = (c.party || 'Independent') + (showTa && c.partyTa ? ' / <span class="ta-text">' + c.partyTa + '</span>' : '');
+          var avatarHtml;
+          if (c.photoUrl || c.photo_url) {
+            avatarHtml = '<div class="candidate-avatar"><img src="' + (c.photoUrl||c.photo_url) + '" alt="' + c.name + '" onerror="this.parentElement.textContent='' + c.name.charAt(0) + ''"></div>';
+          } else {
+            avatarHtml = '<div class="candidate-avatar" style="background:' + (c.partyColor||c.party_color||'#1a3c6e') + ';">' + c.name.charAt(0) + '</div>';
+          }
+          var symbolHtml = (c.symbolUrl||c.symbol_url) ?
+            '<img class="party-symbol" src="' + (c.symbolUrl||c.symbol_url) + '" alt="symbol">' : '';
+          var colorDot = '<span class="party-color-dot" style="background:' + (c.partyColor||c.party_color||'#1a3c6e') + ';"></span>';
+
+          card.innerHTML =
+            '<input type="radio" name="candidate" value="' + c.id + '">' +
+            '<div class="candidate-info">' +
+              '<div class="name">' + nameHtml + '</div>' +
+              '<div class="party">' + colorDot + partyHtml + '</div>' +
+            '</div>' +
+            symbolHtml + avatarHtml;
+
+          card.querySelector('input').addEventListener('change', function() {
+            selectCandidate(c.id, c.name);
+          });
+          container.appendChild(card);
+        });
+      } catch (e) {
+        document.getElementById('candidatesContainer').innerHTML = '<div class="loading" style="color:#e74c3c">Failed to load candidates.</div>';
+      }
+    }
+
+    function selectCandidate(id, name) {
+      selectedCandidateId   = id;
+      selectedCandidateName = name;
+      document.querySelectorAll('.candidate-card').forEach(c => c.classList.remove('selected'));
+      event.target.closest('.candidate-card').classList.add('selected');
+      const btn = document.getElementById('voteBtn');
+      btn.disabled = false; btn.textContent = `Vote for ${name}`;
+    }
+
+    function showConfirm() {
+      if (!selectedCandidateId) return;
+      document.getElementById('confirmName').textContent = selectedCandidateName;
+      document.getElementById('confirmOverlay').classList.add('show');
+    }
+    function closeConfirm() {
+      document.getElementById('confirmOverlay').classList.remove('show');
+    }
+
+    async function castVote() {
+      closeConfirm();
+      const btn = document.getElementById('voteBtn');
+      btn.disabled = true; btn.textContent = 'Recording vote on blockchain…';
+
+      try {
+        const res = await fetch('/nfc/vote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionToken: token, candidateId: selectedCandidateId })
+        });
+        const data = await res.json();
+        clearInterval(timerInterval);
+
+        if (data.success) {
+          sessionStorage.setItem('blockNumber', data.blockNumber || '');
+          sessionStorage.setItem('votedFor',    selectedCandidateName);
+          window.location.href = '/thankyou.html';
+        } else {
+          document.getElementById('errorMsg').textContent = data.message || 'Vote failed.';
+          document.getElementById('errorMsg').classList.add('show');
+          btn.disabled = false; btn.textContent = `Vote for ${selectedCandidateName}`;
+        }
+      } catch (e) {
+        document.getElementById('errorMsg').textContent = 'Server error. Please contact an official.';
+        document.getElementById('errorMsg').classList.add('show');
+        btn.disabled = false;
+      }
+    }
+
+    loadVoterDetails();
+    loadLanguage().then(() => loadCandidates());
+    startTimer();
+</script>
+</body>
+</html>

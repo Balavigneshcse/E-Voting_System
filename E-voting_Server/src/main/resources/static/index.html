@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Voting System</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+          --blue:    #1a3c6e;
+          --blue-lt: #2457a0;
+          --orange:  #e67e22;
+          --green:   #27ae60;
+          --red:     #e74c3c;
+          --gray:    #f4f6f9;
+          --text:    #1c1c1e;
+          --muted:   #6b7280;
+          --border:  #d1d5db;
+          --white:   #ffffff;
+          --radius:  12px;
+        }
+        body {
+          font-family: 'Segoe UI', system-ui, sans-serif;
+          background: var(--gray);
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+        }
+        .header {
+          text-align: center;
+          margin-bottom: 32px;
+        }
+        .header .emblem {
+          width: 72px; height: 72px;
+          background: var(--blue);
+          border-radius: 50%;
+          margin: 0 auto 16px;
+          display: flex; align-items: center; justify-content: center;
+        }
+        .header .emblem svg { width: 40px; height: 40px; }
+        .header h1 { font-size: 26px; font-weight: 700; color: var(--blue); }
+        .header p  { font-size: 14px; color: var(--muted); margin-top: 4px; }
+
+        .steps {
+          display: flex; gap: 0; margin-bottom: 32px;
+          background: var(--white); border-radius: 40px;
+          padding: 6px; border: 1px solid var(--border);
+        }
+        .step {
+          padding: 8px 20px; border-radius: 30px;
+          font-size: 13px; font-weight: 500; color: var(--muted);
+          display: flex; align-items: center; gap: 8px;
+        }
+        .step.active { background: var(--blue); color: var(--white); }
+        .step .num {
+          width: 20px; height: 20px; border-radius: 50%;
+          background: rgba(255,255,255,0.25);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 11px; font-weight: 700;
+        }
+        .step:not(.active) .num { background: var(--border); color: var(--text); }
+
+        .card {
+          background: var(--white);
+          border-radius: var(--radius);
+          padding: 40px;
+          width: 100%; max-width: 480px;
+          border: 1px solid var(--border);
+        }
+        .card h2 { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+        .card .sub { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
+
+        .nfc-zone {
+          border: 2px dashed var(--border);
+          border-radius: 10px;
+          padding: 28px 20px;
+          text-align: center;
+          margin-bottom: 20px;
+          transition: border-color .3s;
+          position: relative;
+          overflow: hidden;
+        }
+        .nfc-zone.pulsing { border-color: var(--blue); animation: pulse-border 1.5s ease-in-out infinite; }
+        @keyframes pulse-border {
+          0%, 100% { border-color: var(--blue); background: rgba(26,60,110,0.03); }
+          50% { border-color: var(--blue-lt); background: rgba(26,60,110,0.07); }
+        }
+        .nfc-icon { margin-bottom: 10px; }
+        .nfc-zone p { font-size: 13px; color: var(--muted); }
+        .nfc-zone strong { display: block; font-size: 15px; color: var(--blue); margin-bottom: 4px; }
+
+        .divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; }
+        .divider span { font-size: 12px; color: var(--muted); white-space: nowrap; }
+        .divider::before, .divider::after { content:''; flex:1; height:1px; background: var(--border); }
+
+        .field label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+        .field input {
+          width: 100%; padding: 12px 14px;
+          border: 1.5px solid var(--border); border-radius: 8px;
+          font-size: 16px; color: var(--text);
+          transition: border-color .2s;
+          letter-spacing: 1px;
+        }
+        .field input:focus { outline: none; border-color: var(--blue); }
+        .field .hint { font-size: 12px; color: var(--muted); margin-top: 5px; }
+
+        .btn {
+          width: 100%; padding: 14px;
+          background: var(--blue); color: var(--white);
+          border: none; border-radius: 8px;
+          font-size: 16px; font-weight: 600;
+          cursor: pointer; margin-top: 20px;
+          transition: background .2s;
+        }
+        .btn:hover { background: var(--blue-lt); }
+        .btn:disabled { background: var(--border); cursor: not-allowed; }
+
+        .alert {
+          padding: 12px 14px; border-radius: 8px;
+          font-size: 14px; margin-top: 16px; display: none;
+        }
+        .alert.error   { background: #fef2f2; color: var(--red);   border: 1px solid #fecaca; }
+        .alert.success { background: #f0fdf4; color: var(--green); border: 1px solid #bbf7d0; }
+        .alert.show    { display: block; }
+
+        .footer { margin-top: 24px; font-size: 12px; color: var(--muted); text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="emblem">
+        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 4L6 10v10c0 8.84 5.93 17.12 14 19.93C28.07 37.12 34 28.84 34 20V10L20 4z" fill="white" opacity="0.9"/>
+            <path d="M15 20l4 4 8-8" stroke="#1a3c6e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </div>
+    <h1>Secure E-Voting System</h1>
+    <p>State Election Commission — Blockchain Secured</p>
+</div>
+
+<div class="steps">
+    <div class="step active"><span class="num">1</span> Identity</div>
+    <div class="step"><span class="num">2</span> Biometric</div>
+    <div class="step"><span class="num">3</span> Vote</div>
+</div>
+
+<div class="card">
+    <h2>Voter Identification</h2>
+    <p class="sub">Tap your NFC voter card on the reader, or enter your Voter ID manually.</p>
+
+    <div class="nfc-zone pulsing" id="nfcZone">
+        <div class="nfc-icon">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                <circle cx="24" cy="24" r="22" stroke="#1a3c6e" stroke-width="1.5" opacity="0.2"/>
+                <circle cx="24" cy="24" r="16" stroke="#1a3c6e" stroke-width="1.5" opacity="0.35"/>
+                <circle cx="24" cy="24" r="10" stroke="#1a3c6e" stroke-width="1.5" opacity="0.55"/>
+                <circle cx="24" cy="24" r="4"  fill="#1a3c6e"/>
+            </svg>
+        </div>
+        <strong>Tap your NFC card here</strong>
+        <p>Hold card near the reader for 1–2 seconds</p>
+    </div>
+
+    <div class="divider"><span>or enter manually</span></div>
+
+    <div class="field">
+        <label for="voterId">Voter ID</label>
+        <input type="text" id="voterId" placeholder="e.g. V001" autocomplete="off"
+               oninput="this.value = this.value.toUpperCase()">
+        <p class="hint">Your NFC card reader will auto-fill this field when tapped.</p>
+    </div>
+
+    <button class="btn" id="verifyBtn" onclick="verifyIdentity()">Verify Identity</button>
+    <div class="alert error"   id="errorMsg"></div>
+    <div class="alert success" id="successMsg"></div>
+</div>
+
+<p class="footer">Your vote is encrypted and recorded on the blockchain. No one can trace your choice.</p>
+
+<script>
+    const nfcInput = document.getElementById('voterId');
+    nfcInput.focus();
+
+    nfcInput.addEventListener('input', () => {
+      if (nfcInput.value.length > 0) {
+        document.getElementById('nfcZone').classList.remove('pulsing');
+      } else {
+        document.getElementById('nfcZone').classList.add('pulsing');
+      }
+    });
+
+    async function verifyIdentity() {
+      const voterId = nfcInput.value.trim();
+      if (!voterId) { showError('Please enter your Voter ID or tap your NFC card.'); return; }
+
+      const btn = document.getElementById('verifyBtn');
+      btn.disabled = true; btn.textContent = 'Verifying…';
+      clearMessages();
+
+      try {
+        const res = await fetch('/nfc/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ voterIdentifier: voterId })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          sessionStorage.setItem('sessionToken',  data.sessionToken);
+          sessionStorage.setItem('voterId',      document.getElementById('voterId').value.trim());
+          sessionStorage.setItem('voterName',    data.voterName);
+          sessionStorage.setItem('electionName', data.electionName || 'Election');
+          sessionStorage.setItem('electionType', data.electionType || 'CM');
+          sessionStorage.setItem('voterName',    data.voterName);
+          showSuccess('Identity verified! Redirecting to biometric scan…');
+          setTimeout(() => window.location.href = '/biometric.html', 1400);
+        } else {
+          showError(data.message || 'Verification failed.');
+          btn.disabled = false; btn.textContent = 'Verify Identity';
+        }
+      } catch (e) {
+        showError('Server error. Please try again.');
+        btn.disabled = false; btn.textContent = 'Verify Identity';
+      }
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('errorMsg');
+      el.textContent = msg; el.classList.add('show');
+    }
+    function showSuccess(msg) {
+      const el = document.getElementById('successMsg');
+      el.textContent = msg; el.classList.add('show');
+    }
+    function clearMessages() {
+      ['errorMsg','successMsg'].forEach(id => {
+        document.getElementById(id).classList.remove('show');
+      });
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') verifyIdentity();
+    });
+</script>
+</body>
+</html>

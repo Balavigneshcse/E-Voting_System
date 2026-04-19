@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vote Recorded — E-Voting</title>
+    <style>
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+        :root{--blue:#1a3c6e;--green:#27ae60;--gray:#f4f6f9;--text:#1c1c1e;--muted:#6b7280;--border:#d1d5db;--white:#ffffff;--radius:12px;}
+        body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--gray);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
+        .card{background:var(--white);border-radius:var(--radius);padding:48px 40px;width:100%;max-width:480px;border:1px solid var(--border);text-align:center;}
+        .check-circle{width:88px;height:88px;border-radius:50%;background:#f0fdf4;border:2px solid #bbf7d0;margin:0 auto 24px;display:flex;align-items:center;justify-content:center;}
+        .check-circle svg{width:44px;height:44px;}
+        h2{font-size:26px;font-weight:700;color:var(--green);margin-bottom:8px;}
+        .sub{font-size:15px;color:var(--muted);margin-bottom:28px;}
+        .info-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);}
+        .info-row:last-of-type{border-bottom:none;}
+        .info-row .label{font-size:13px;color:var(--muted);}
+        .info-row .value{font-size:14px;font-weight:600;color:var(--text);}
+        .info-box{background:#f8faff;border:1px solid #dbeafe;border-radius:8px;padding:16px;margin:24px 0;}
+        .blockchain-hash{font-family:monospace;font-size:12px;color:var(--blue);word-break:break-all;margin-top:4px;}
+        .timer-text{font-size:13px;color:var(--muted);margin-top:16px;}
+        .timer-text span{font-weight:700;color:var(--text);}
+        .home-btn{margin-top:24px;padding:12px 32px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;}
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="check-circle">
+        <svg viewBox="0 0 44 44" fill="none">
+            <circle cx="22" cy="22" r="20" fill="#27ae60" opacity="0.15"/>
+            <path d="M12 22l7 7 13-14" stroke="#27ae60" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </div>
+    <h2>Vote Recorded!</h2>
+    <p class="sub">Your vote has been securely recorded on the blockchain.</p>
+
+    <div class="info-box">
+        <div class="info-row"><span class="label">Voted for</span><span class="value" id="votedFor">—</span></div>
+        <div class="info-row"><span class="label">Block number</span><span class="value" id="blockNum">—</span></div>
+        <div class="info-row"><span class="label">Status</span><span class="value" style="color:#27ae60">Confirmed</span></div>
+    </div>
+
+    <p style="font-size:13px;color:var(--muted);">Your identity is not linked to your vote. The blockchain only records that a valid vote was cast.</p>
+    <p class="timer-text">Returning to home in <span id="countdown">10</span>s</p>
+    <button class="home-btn" onclick="goHome()">Return to Home</button>
+</div>
+<script>
+    document.getElementById('votedFor').textContent = sessionStorage.getItem('votedFor') || '—';
+    const bn = sessionStorage.getItem('blockNumber');
+    document.getElementById('blockNum').textContent = bn !== null ? `#${bn}` : '—';
+    sessionStorage.clear();
+
+    let n = 10;
+    const iv = setInterval(() => {
+      n--; document.getElementById('countdown').textContent = n;
+      if (n <= 0) { clearInterval(iv); goHome(); }
+    }, 1000);
+    function goHome() { clearInterval(iv); window.location.href = '/index.html'; }
+</script>
+</body>
+</html>l>

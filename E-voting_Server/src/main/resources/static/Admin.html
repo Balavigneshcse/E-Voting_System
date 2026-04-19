@@ -1,0 +1,1777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - E-Voting System</title>
+    <style>
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+        :root{--blue:#1a3c6e;--blue-lt:#2457a0;--red:#e74c3c;--green:#27ae60;--gray:#f4f6f9;--text:#1c1c1e;--muted:#6b7280;--border:#d1d5db;--white:#ffffff;--radius:12px;}
+        body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--gray);min-height:100vh;padding:0;}
+        .navbar{background:var(--blue);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;}
+        .logo{color:#fff;font-size:17px;font-weight:700;}
+        .nav-right{display:flex;align-items:center;gap:20px;}
+        .nav-right a{color:#bfdbfe;font-size:13px;text-decoration:none;}
+        .nav-right a.logout{color:#fca5a5;font-weight:600;}
+        .admin-pill{background:rgba(255,255,255,.15);color:#fff;font-size:12px;padding:3px 10px;border-radius:20px;font-weight:600;}
+        .tab-bar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;display:flex;overflow-x:auto;}
+        .tab{padding:14px 22px;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;}
+        .tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+        .content{max-width:900px;margin:28px auto;padding:0 20px;}
+        .section{display:none;}
+        .section.active{display:block;}
+        .card{background:var(--white);border-radius:var(--radius);padding:28px;border:1px solid var(--border);margin-bottom:16px;}
+        .card h3{font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px;}
+        .card p{font-size:13px;color:var(--muted);margin-bottom:18px;}
+        .active-banner{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+        .active-dot{width:10px;height:10px;border-radius:50%;background:var(--green);flex-shrink:0;animation:blink 1.4s infinite;}
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+        .aname{font-size:15px;font-weight:700;color:var(--blue);}
+        .asub{font-size:12px;color:var(--muted);}
+        .elec-list{display:flex;flex-direction:column;gap:10px;}
+        .elec-card{border:2px solid var(--border);border-radius:10px;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+        .elec-card.is-active{border-color:var(--green);background:#f0fdf4;}
+        .elec-card.locked{opacity:.45;pointer-events:none;}
+        .ename{font-size:14px;font-weight:600;color:var(--text);}
+        .emeta{font-size:12px;color:var(--muted);margin-top:4px;}
+        .bdg{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;display:inline-block;margin-right:3px;}
+        .bdg-pm{background:#fef3c7;color:#92400e;}
+        .bdg-cm{background:#ede9fe;color:#4c1d95;}
+        .bdg-mun{background:#dcfce7;color:#14532d;}
+        .bdg-on{background:#dcfce7;color:#14532d;}
+        .bdg-off{background:#f1f5f9;color:#64748b;}
+        .bdg-lock{background:#fee2e2;color:#991b1b;}
+        .eactions{display:flex;gap:8px;flex-wrap:wrap;}
+        .bsm{padding:7px 14px;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;}
+        .ben{background:var(--blue);color:#fff;}
+        .brs{background:#fef2f2;color:var(--red);border:1px solid #fecaca;}
+        .bre{background:#eff6ff;color:var(--blue);border:1px solid #bfdbfe;}
+        .bcu{background:#dcfce7;color:#14532d;cursor:default;}
+        .stat-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;}
+        .stat{flex:1;min-width:110px;background:var(--gray);border-radius:8px;padding:14px;text-align:center;}
+        .stat .val{font-size:26px;font-weight:700;color:var(--blue);}
+        .stat .lbl{font-size:11px;color:var(--muted);margin-top:2px;}
+        .lang-row{display:flex;gap:10px;margin-top:12px;}
+        .lbtn{padding:9px 20px;border-radius:8px;border:2px solid var(--border);font-size:14px;font-weight:600;cursor:pointer;background:var(--white);color:var(--muted);}
+        .lbtn.active{border-color:var(--blue);background:#eff6ff;color:var(--blue);}
+        .rtable{width:100%;border-collapse:collapse;font-size:13px;}
+        .rtable th{background:#f8faff;padding:10px 12px;text-align:left;font-weight:600;color:var(--blue);border-bottom:2px solid var(--border);}
+        .rtable td{padding:10px 12px;border-bottom:1px solid var(--border);}
+        .rtable .win{background:#f0fdf4;font-weight:600;}
+        .pm-state-block{margin-bottom:8px;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+        .pm-state-hdr{padding:10px 16px;background:#f0f4ff;display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+        .pm-state-hdr:hover{background:#e0eaff;}
+        .chain-list{max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;}
+        .cblock{padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;}
+        .cblock:last-child{border-bottom:none;}
+        .cblock .bn{font-weight:700;color:var(--blue);}
+        .cblock .hsh{font-family:monospace;color:var(--muted);word-break:break-all;margin-top:2px;}
+        .cblock.genesis{background:#f8faff;}
+        .btn-primary{padding:10px 20px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-right:8px;}
+        .btn-primary:hover{background:var(--blue-lt);}
+        .btn-green{background:#27ae60;}
+        .alert{padding:11px 14px;border-radius:8px;font-size:13px;margin-top:12px;display:none;}
+        .alert.err{background:#fef2f2;color:var(--red);border:1px solid #fecaca;}
+        .alert.suc{background:#f0fdf4;color:var(--green);border:1px solid #bbf7d0;}
+        .alert.show{display:block;}
+        .vbdg{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;}
+        .vbdg.ok{background:#f0fdf4;color:var(--green);}
+        .vbdg.bad{background:#fef2f2;color:var(--red);}
+        .tier-item{border-radius:10px;padding:14px 18px;border:1px solid var(--border);margin-bottom:8px;}
+        .info-box{background:#fef9c3;border:1px solid #fcd34d;border-radius:8px;padding:12px 16px;font-size:13px;color:#78350f;margin-bottom:16px;}
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <div class="logo">Secure E-Voting System</div>
+    <div class="nav-right">
+        <span class="admin-pill" id="adminPill">Admin</span>
+        <a href="/index.html">Voting Portal</a>
+        <a href="/perform-logout" class="logout">Logout</a>
+    </div>
+</div>
+
+<div class="tab-bar">
+    <div class="tab active" onclick="showTab('elections')">Elections</div>
+    <div class="tab" onclick="showTab('results')">Results</div>
+    <div class="tab" onclick="showTab('blockchain')">Blockchain</div>
+    <div class="tab" onclick="showTab('data')" id="dataTab" style="display:none;">Data Management</div>
+    <div class="tab" onclick="showTab('edit')" id="editTab" style="display:none;">Edit</div>
+    <div class="tab" onclick="showTab('locations')" id="locationsTab" style="display:none;"> Locations</div>
+    <div class="tab" onclick="showTab('settings')">Settings</div>
+</div>
+
+<div class="content">
+
+    <div class="section active" id="tab-elections">
+        <div class="card">
+            <h3>Active Election</h3>
+            <div class="active-banner">
+                <div class="active-dot"></div>
+                <div>
+                    <div class="aname" id="activeElecName">Loading...</div>
+                    <div class="asub" id="activeElecSub"></div>
+                </div>
+            </div>
+            <h3 style="margin-bottom:12px;">Elections</h3>
+            <div id="accessInfo" class="info-box" style="display:none;"></div>
+            <div class="elec-list" id="electionList">
+                <div style="padding:12px;color:var(--muted);">Loading...</div>
+            </div>
+            <div class="alert err" id="elecErr"></div>
+            <div class="alert suc" id="elecSuc"></div>
+        </div>
+        <div class="card" id="tierCard" style="display:none;">
+            <h3>Municipality Election - 4 Tiers</h3>
+            <p>Each tier has its own candidates and colour coding.</p>
+            <div id="tierList"></div>
+        </div>
+    </div>
+
+    <div class="section" id="tab-results">
+        <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+                <h3 id="resultsTitle">Election Results</h3>
+                <button class="btn-primary" onclick="loadResults()">↻ Refresh</button>
+            </div>
+            <!-- STATS -->
+            <div class="stat-row">
+                <div class="stat"><div class="val" id="rVoters">-</div><div class="lbl">Registered voters</div></div>
+                <div class="stat"><div class="val" id="rCast">-</div><div class="lbl">Votes cast</div></div>
+                <div class="stat"><div class="val" id="rTurn">-</div><div class="lbl">Turnout %</div></div>
+                <div class="stat"><div class="val" id="rCands">-</div><div class="lbl">Candidates</div></div>
+            </div>
+
+            <!-- STATE FILTER (CM admin only) -->
+            <div id="stateFilterBar" style="display:none;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                <label style="font-size:13px;font-weight:600;color:var(--blue);">State:</label>
+                <select id="stateFilter" onchange="filterByState()" style="padding:9px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;flex:1;max-width:260px;">
+                    <option value="">— Select a state for district-wise view —</option>
+                </select>
+                <span id="stateBreadcrumb" style="font-size:12px;color:var(--muted);"></span>
+                <button id="btnBackToStates" class="bsm bre" style="display:none;" onclick="clearStateFilter()">← All States</button>
+            </div>
+
+            <!-- MUNICIPALITY TIER TABS (Municipality admin only) -->
+            <div id="munTierBar" style="display:none;margin-bottom:14px;">
+                <div style="font-size:13px;font-weight:600;color:var(--blue);margin-bottom:8px;">Show results by tier:</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;" id="munTierBtns"></div>
+            </div>
+
+            <div id="resultsBody">
+                <div style="text-align:center;padding:32px;color:var(--muted);">Click Refresh to load results.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section" id="tab-blockchain">
+        <div class="card">
+            <h3>Blockchain Audit Trail</h3>
+            <p>Every vote recorded as an immutable SHA-256 block. Any tampering is instantly detected.</p>
+            <div class="stat-row">
+                <div class="stat"><div class="val" id="bcBlocks">-</div><div class="lbl">Total blocks</div></div>
+                <div class="stat"><div class="val" id="bcVotes">-</div><div class="lbl">Votes recorded</div></div>
+                <div class="stat"><div class="val" id="bcValid">-</div><div class="lbl">Chain integrity</div></div>
+            </div>
+            <div class="chain-list" id="chainList">
+                <div style="padding:16px;color:var(--muted);">Click Load Chain to view blocks.</div>
+            </div>
+            <div style="margin-top:12px;">
+                <button class="btn-primary" onclick="loadChain()">Load Chain</button>
+                <button class="btn-primary btn-green" onclick="validateChain()">Validate Integrity</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="section" id="tab-data">
+        <div class="card">
+            <h3>Add New Voter</h3>
+            <p>Register a new voter in the system with their constituency details.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;" id="voterForm">
+                <!-- Row 1: IDs -->
+                <div><label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Voter ID *</label>
+                    <input type="text" id="vVoterId" placeholder="e.g. V100" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;"></div>
+                <div><label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Full Name *</label>
+                    <input type="text" id="vName" placeholder="Voter full name" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;"></div>
+
+                <!-- Row 2: Card & Aadhaar -->
+                <div><label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">NFC Card ID</label>
+                    <input type="text" id="vNfc" placeholder="NFC-XXXXXXXX" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;"></div>
+                <div><label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Aadhaar Number</label>
+                    <input type="text" id="vAadhaar" placeholder="12 digit number" maxlength="12" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;"></div>
+
+                <!-- Row 3: State → LS Constituency -->
+                <div><label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">State *</label>
+                    <select id="vState" onchange="vOnStateChange()" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;">
+                        <option value="">Select state...</option>
+                    </select></div>
+                <div><label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">LS Constituency</label>
+                    <select id="vLs" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;"><option value="">— select state first —</option></select></div>
+
+                <!-- Row 4: District → VS Constituency -->
+                <div><label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">District</label>
+                    <select id="vDistrict" onchange="vOnDistrictChange()" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;">
+                        <option value="">— select state first —</option>
+                    </select></div>
+                <div><label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">VS Constituency</label>
+                    <select id="vVs" onchange="vOnVsChange()" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;"><option value="">— select district first —</option></select></div>
+
+                <!-- Row 5: Council → Panchayat -->
+                <div><label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Council / Corporation</label>
+                    <select id="vCouncil" onchange="vOnCouncilChange()" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;">
+                        <option value="">— select VS constituency first —</option>
+                    </select></div>
+                <div><label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Panchayat</label>
+                    <select id="vPanchayat" onchange="vOnPanchayatChange()" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;">
+                        <option value="">— select council first —</option>
+                    </select></div>
+
+                <!-- Row 6: Ward -->
+                <div><label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Ward</label>
+                    <select id="vWard" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;"><option value="">— select panchayat first —</option></select></div>
+                <div></div>
+            </div>
+
+            <!-- Photo & Fingerprint row -->      <!-- Photo & Fingerprint row -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+                <div>
+                    <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Voter Photo</label>
+                    <input type="file" id="vPhoto" accept="image/*" onchange="previewPhoto(this,'vPhotoPreview')" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;">
+                    <img id="vPhotoPreview" style="display:none;width:80px;height:80px;border-radius:50%;object-fit:cover;margin-top:8px;border:2px solid var(--blue);">
+                </div>
+                <div>
+                    <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Fingerprint Template (Base64)</label>
+                    <div style="display:flex;gap:8px;align-items:center;margin-top:4px;">
+                        <button class="bsm ben" id="fpEnrollBtn" onclick="enrollFingerprint()" style="font-size:12px;flex:1;">
+                            🖐 Scan Fingerprint (WebAuthn)
+                        </button>
+                        <span id="fpStatus" style="font-size:12px;color:var(--muted);">Not enrolled</span>
+                    </div>
+                    <div id="fpInfo" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:8px;margin-top:6px;font-size:11px;color:#14532d;">
+                        ✓ Fingerprint enrolled via WebAuthn
+                    </div>
+                    <input type="hidden" id="vFingerprint" value="">
+                </div>
+            </div>
+            <button class="btn-primary" style="margin-top:16px;" onclick="addVoter()">Add Voter</button>
+            <div class="alert err" id="voterErr"></div>
+            <div class="alert suc" id="voterSuc"></div>
+        </div>
+
+        <div class="card">
+            <h3>Add New Candidate</h3>
+            <p>Register a candidate for a specific election and constituency.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div><label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Candidate Name *</label><input type="text" id="cName" placeholder="Full name" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;"></div>
+                <div><label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Party Name *</label><input type="text" id="cParty" placeholder="Party name" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;"></div>
+                <div><label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Name (Tamil)</label><input type="text" id="cNameTa" placeholder="தமிழ் பெயர்" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;"></div>
+                <div><label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Party (Tamil)</label><input type="text" id="cPartyTa" placeholder="கட்சி பெயர்" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;"></div>
+                <div><label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Election *</label>
+                    <select id="cElection" onchange="loadCandidateConstituencies()" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;">
+                        <option value="">Select election...</option>
+                    </select></div>
+                <div><label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">State</label>
+                    <select id="cState" onchange="loadCandidateConstituencies()" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;">
+                        <option value="">Select state...</option>
+                    </select></div>
+                <div><label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Constituency</label>
+                    <select id="cConstituency" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;"><option value="">Select constituency...</option></select></div>
+                <div><label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Candidate Photo <span style="font-size:10px;color:var(--muted);">(upload or URL)</span></label>
+                    <input type="file" id="cPhotoFile" accept="image/*" onchange="previewPhoto(this,'cPhotoPreview')" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;margin-bottom:4px;">
+                    <img id="cPhotoPreview" style="display:none;width:70px;height:70px;border-radius:50%;object-fit:cover;border:2px solid var(--blue);">
+                    <input type="text" id="cPhoto" placeholder="Or paste URL" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;margin-top:4px;"></div>
+                <div><label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Party Symbol <span style="font-size:10px;color:var(--muted);">(upload or URL)</span></label>
+                    <input type="file" id="cSymbolFile" accept="image/*" onchange="previewPhoto(this,'cSymbolPreview')" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;margin-bottom:4px;">
+                    <img id="cSymbolPreview" style="display:none;width:70px;height:70px;border-radius:6px;object-fit:contain;border:1px solid var(--border);">
+                    <input type="text" id="cSymbol" placeholder="Or paste symbol URL" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;margin-top:4px;"></div>
+                <div><label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Party Color</label>
+                    <input type="color" id="cColor" value="#1a3c6e" style="width:100%;padding:6px;border:1.5px solid var(--border);border-radius:8px;height:42px;cursor:pointer;"></div>
+            </div>
+            <button class="btn-primary" style="margin-top:16px;" onclick="addCandidate()">Add Candidate</button>
+            <div class="alert err" id="candErr"></div>
+            <div class="alert suc" id="candSuc"></div>
+        </div>
+    </div>
+
+    <div class="section" id="tab-edit">
+        <div class="card">
+            <h3>Edit / Delete Voters</h3>
+            <p>Search and manage existing voters.</p>
+            <div style="display:flex;gap:10px;margin-bottom:14px;">
+                <input type="text" id="editVoterSearch" placeholder="Search by Voter ID or Name..."
+                       style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;"
+                       oninput="searchVoters(this.value)">
+                <button class="btn-primary" onclick="loadVoterList()">Load All</button>
+            </div>
+            <div id="voterEditList" style="max-height:400px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;"></div>
+            <div class="alert err" id="editVoterErr"></div>
+            <div class="alert suc" id="editVoterSuc"></div>
+        </div>
+        <div class="card">
+            <h3>Edit / Delete Candidates</h3>
+            <p>Search and manage existing candidates.</p>
+            <div style="display:flex;gap:10px;margin-bottom:14px;">
+                <select id="editCandElec" onchange="loadCandidateList()" style="padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;flex:1;">
+                    <option value="">All elections...</option>
+                </select>
+                <button class="btn-primary" onclick="loadCandidateList()">Load</button>
+            </div>
+            <div id="candEditList" style="max-height:400px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;"></div>
+            <div class="alert err" id="editCandErr"></div>
+            <div class="alert suc" id="editCandSuc"></div>
+        </div>
+        <div class="card">
+            <h3>Add Local Bodies</h3>
+            <p>Add new constituencies, councils, panchayats, or wards.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+                <div><label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Type</label>
+                    <select id="lbType" onchange="toggleLbFields()" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;">
+                        <option value="council">Council</option>
+                        <option value="panchayat">Panchayat</option>
+                        <option value="ward">Ward</option>
+                    </select></div>
+                <div><label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Name *</label>
+                    <input type="text" id="lbName" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;" placeholder="Name"></div>
+                <div id="lbCouncilDiv"><label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Council (for Panchayat)</label>
+                    <select id="lbCouncil" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;"><option value="">Select...</option></select></div>
+                <div id="lbPanchDiv"><label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Panchayat (for Ward)</label>
+                    <select id="lbPanch" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;"><option value="">Select...</option></select></div>
+                <div id="lbWardNumDiv"><label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Ward Number</label>
+                    <input type="number" id="lbWardNum" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;" placeholder="1"></div>
+            </div>
+            <button class="btn-primary" onclick="addLocalBody()">Add</button>
+            <div class="alert err" id="lbErr"></div>
+            <div class="alert suc" id="lbSuc"></div>
+        </div>
+    </div>
+
+    <div class="section" id="tab-locations">
+        <!-- Sub-tab navigation -->
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;">
+            <button class="bsm ben" id="locTab-states"    onclick="switchLocTab('states')">States / UTs</button>
+            <button class="bsm bre" id="locTab-districts"  onclick="switchLocTab('districts')">Districts</button>
+            <button class="bsm bre" id="locTab-ls"         onclick="switchLocTab('ls')">LS Constituencies</button>
+            <button class="bsm bre" id="locTab-vs"         onclick="switchLocTab('vs')">VS Constituencies</button>
+            <button class="bsm bre" id="locTab-councils"   onclick="switchLocTab('councils')">Councils</button>
+            <button class="bsm bre" id="locTab-panchayats" onclick="switchLocTab('panchayats')">Panchayats</button>
+            <button class="bsm bre" id="locTab-wards"      onclick="switchLocTab('wards')">Wards</button>
+        </div>
+
+        <!-- Filter bar -->
+        <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;" id="locFilterBar">
+            <select id="locStateFilter" onchange="loadLocData()" style="width:100%;padding:9px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;" style="width:auto;min-width:200px;">
+                <option value="">All States</option>
+            </select>
+            <select id="locDistrictFilter" onchange="loadLocData()" style="width:100%;padding:9px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;" style="display:none;width:auto;min-width:200px;">
+                <option value="">All Districts</option>
+            </select>
+            <input type="text" id="locSearch" oninput="filterLocTable(this.value)" placeholder="Search..." style="width:100%;padding:9px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;" style="width:200px;">
+            <button class="btn-primary" onclick="showAddLocForm()">+ Add New</button>
+        </div>
+
+        <!-- Add form (hidden by default) -->
+        <div id="locAddForm" style="display:none;background:#f8faff;border:1.5px solid var(--blue);border-radius:10px;padding:16px;margin-bottom:14px;">
+            <h4 id="locFormTitle" style="font-size:14px;font-weight:700;color:var(--blue);margin-bottom:12px;">Add New</h4>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" id="locFormFields"></div>
+            <div style="margin-top:12px;display:flex;gap:8px;">
+                <button class="btn-primary" onclick="submitLocForm()">Save</button>
+                <button class="bsm brs" onclick="document.getElementById('locAddForm').style.display='none'">Cancel</button>
+            </div>
+            <div class="alert err" id="locFormErr"></div>
+            <div class="alert suc" id="locFormSuc"></div>
+        </div>
+
+        <!-- Data table -->
+        <div class="card" style="padding:0;overflow:hidden;">
+            <div id="locTableContainer" style="max-height:500px;overflow-y:auto;">
+                <div style="padding:24px;text-align:center;color:var(--muted);">Select a location type above to manage.</div>
+            </div>
+        </div>
+        <div class="alert err" id="locErr" style="margin-top:8px;"></div>
+        <div class="alert suc" id="locSuc" style="margin-top:8px;"></div>
+    </div>
+
+    <div class="section" id="tab-settings">
+        <div class="card">
+            <h3>Language Settings</h3>
+            <p>Choose the language displayed to voters on the voting page. Tamil mode shows both English and Tamil for election names, candidate names, and party names.</p>
+            <div class="lang-row">
+                <button class="lbtn active" id="btnEN" onclick="setLanguage('EN')">English Only</button>
+                <button class="lbtn" id="btnENTA" onclick="setLanguage('EN_TA')">English + Tamil</button>
+                <button class="lbtn" id="btnENHI" onclick="setLanguage('EN_HI')">English + Hindi</button>
+            </div>
+            <div class="alert suc" id="langSuc"></div>
+        </div>
+        <div class="card">
+            <h3>Reset Election Votes</h3>
+            <p>Clear all votes for your assigned election. Increments the election cycle. Cannot be undone.</p>
+            <div id="resetList" style="display:flex;flex-direction:column;gap:8px;"></div>
+            <div class="alert err" id="resetErr"></div>
+            <div class="alert suc" id="resetSuc"></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    var allElections = [];
+    var activeElection = null;
+    var currentLang = 'EN';
+    var currentResultsId = null;
+    var myRole = null;
+    var myElectionType = null;
+    var isSuperAdmin = false;
+    var isDataAdmin = false;
+
+    function showTab(id) {
+      var tabs = ['elections', 'results', 'blockchain', 'data', 'edit', 'locations', 'settings'];
+      var tabEls = document.querySelectorAll('.tab');
+      var sections = document.querySelectorAll('.section');
+      tabEls.forEach(function(t) { t.classList.remove('active'); });
+      sections.forEach(function(s) { s.classList.remove('active'); });
+      tabEls[tabs.indexOf(id)].classList.add('active');
+      document.getElementById('tab-' + id).classList.add('active');
+      if (id === 'results')    loadResults();
+      if (id === 'blockchain') loadChainStats();
+      if (id === 'settings')   loadSettings();
+      if (id === 'data')       loadDataPanel();
+      if (id === 'edit')       loadEditPanel();
+      if (id === 'locations') loadLocationsPanel();
+    }
+
+    function canManageElection(election) {
+      if (isSuperAdmin) return true;
+      var type = (election.type || '').toUpperCase();
+      return type === myElectionType;
+    }
+
+    function init() {
+      fetch('/auth/me')
+        .then(function(r) { return r.json(); })
+        .then(function(me) {
+          myElectionType = me.electionType || null;
+          isSuperAdmin = me.isSuperAdmin || false;
+          isDataAdmin   = me.isDataAdmin  || false;
+          var username = me.username || 'Admin';
+          document.getElementById('adminPill').textContent = username;
+
+          var typeLabels = { PM: 'PM Election Admin', CM: 'CM Election Admin',
+            MUNICIPALITY: 'Municipality Admin', ALL: 'Super Admin' };
+          var label = isSuperAdmin ? 'Super Admin - All Elections' :
+            (typeLabels[myElectionType] || 'Admin');
+
+          if (isDataAdmin && !isSuperAdmin) {
+            document.getElementById('dataTab').style.display = 'block';
+            var info = document.getElementById('accessInfo');
+            info.style.display = 'block';
+            info.textContent = 'You are logged in as ' + username + ' (Data Admin). You can add voters and candidates.';
+          } else if (!isSuperAdmin && myElectionType && myElectionType !== 'DATA') {
+            var info = document.getElementById('accessInfo');
+            info.style.display = 'block';
+            info.textContent = 'You are logged in as ' + username + ' (' + label + '). You can only manage the ' + myElectionType + ' election.';
+          }
+          if (isSuperAdmin) {
+            document.getElementById('dataTab').style.display = 'block';
+            document.getElementById('editTab').style.display = 'block';
+            document.getElementById('locationsTab').style.display = 'block';
+          }
+
+          // DATA_ADMIN only sees the Data Management tab
+          if (isDataAdmin && !isSuperAdmin) {
+            // Hide all other tabs
+            document.querySelectorAll('.tab').forEach(function(t) { t.style.display = 'none'; });
+            // Show only data tab
+            document.getElementById('dataTab').style.display = 'block';
+            document.getElementById('editTab').style.display = 'block';
+            document.getElementById('locationsTab').style.display = 'block';
+            showTab('data');
+            return;
+          }
+
+          loadElections();
+        })
+        .catch(function() { loadElections(); });
+    }
+
+    function loadElections() {
+      fetch('/admin/elections')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          allElections = data;
+          renderElections();
+        })
+        .catch(function(e) {
+          document.getElementById('electionList').innerHTML =
+            '<div style="padding:12px;color:var(--red);">Failed to load: ' + e.message + '</div>';
+        });
+
+      fetch('/admin/active-election')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          activeElection = data;
+          document.getElementById('activeElecName').textContent = data.name || 'None';
+          document.getElementById('activeElecSub').textContent =
+            'Type: ' + (data.type || '') + ' | Cycle: ' + (data.electionCycle || 1);
+          if (data.type === 'MUNICIPALITY') loadTiers();
+        })
+        .catch(function() {
+          document.getElementById('activeElecName').textContent = 'No election active';
+        });
+    }
+
+    function renderElections() {
+      var list = document.getElementById('electionList');
+      list.innerHTML = '';
+
+      allElections.forEach(function(e) {
+        var on = e.isActive || e.is_active;
+        var canManage = canManageElection(e);
+        var type = (e.type || '').toLowerCase();
+        var typeBadge = type === 'municipality' ? 'bdg-mun' : ('bdg-' + type);
+        var div = document.createElement('div');
+        div.className = 'elec-card' + (on ? ' is-active' : '') + (!canManage ? ' locked' : '');
+
+        var cycle = e.electionCycle || e.election_cycle || 1;
+
+        var infoHtml = '<div><div class="ename">' + e.name + '</div>';
+        infoHtml += '<div class="emeta">';
+        infoHtml += '<span class="bdg ' + typeBadge + '">' + e.type + '</span>';
+        infoHtml += '<span class="bdg ' + (on ? 'bdg-on' : 'bdg-off') + '">' + (on ? 'ACTIVE' : 'Inactive') + '</span>';
+        if (!canManage) infoHtml += '<span class="bdg bdg-lock">No access</span>';
+        infoHtml += 'Cycle ' + cycle + '</div></div>';
+
+        var actHtml = '<div class="eactions">';
+        if (canManage) {
+          if (on) {
+            actHtml += '<span class="bsm bcu">Active</span>';
+          } else {
+            actHtml += '<button class="bsm ben" id="enable-' + e.id + '">Enable</button>';
+          }
+          actHtml += '<button class="bsm bre" id="results-' + e.id + '">Results</button>';
+        } else {
+          actHtml += '<span style="font-size:12px;color:var(--muted);">Managed by another admin</span>';
+        }
+        actHtml += '</div>';
+
+        div.innerHTML = infoHtml + actHtml;
+        list.appendChild(div);
+
+        if (canManage) {
+          if (!on) {
+            var enableBtn = document.getElementById('enable-' + e.id);
+            if (enableBtn) {
+              enableBtn.addEventListener('click', function() { enableElection(e.id); });
+            }
+          }
+          var resBtn = document.getElementById('results-' + e.id);
+          if (resBtn) {
+            resBtn.addEventListener('click', function() { viewResults(e.id, e.name); });
+          }
+        }
+      });
+    }
+
+    function loadTiers() {
+      fetch('/municipality/tiers')
+        .then(function(r) { return r.json(); })
+        .then(function(tiers) {
+          document.getElementById('tierCard').style.display = 'block';
+          var list = document.getElementById('tierList');
+          list.innerHTML = '';
+          tiers.forEach(function(t) {
+            var div = document.createElement('div');
+            div.className = 'tier-item';
+            div.style.background = t.bgColor || t.bg_color || '#fff';
+            div.innerHTML = '<div style="font-weight:700;font-size:14px;">Tier ' +
+              (t.tierNumber || t.tier_number) + ': ' + (t.nameEn || t.name_en) + '</div>' +
+              '<div style="font-size:12px;margin-top:2px;opacity:.75;">' + (t.nameTa || t.name_ta || '') + '</div>';
+            list.appendChild(div);
+          });
+        }).catch(function() {});
+    }
+
+    function enableElection(id) {
+      document.getElementById('elecErr').classList.remove('show');
+      document.getElementById('elecSuc').classList.remove('show');
+      fetch('/admin/enable-election/' + id, { method: 'POST' })
+        .then(function(r) { return r.text(); })
+        .then(function(txt) {
+          showAlert('elecSuc', txt);
+          loadElections();
+        })
+        .catch(function() { showAlert('elecErr', 'Failed to enable election.'); });
+    }
+
+    function viewResults(id, name) {
+      currentResultsId = id;
+      currentResultsElecId = id;
+      showTab('results');
+      document.getElementById('resultsTitle').textContent = 'Results: ' + name;
+      loadResultsForElection(id);
+    }
+
+    function loadResults() {
+      if (currentResultsId) { loadResultsForId(currentResultsId); return; }
+      if (!activeElection) {
+        document.getElementById('resultsBody').innerHTML =
+          '<div style="text-align:center;padding:32px;color:var(--muted);">No active election selected.</div>';
+        return;
+      }
+      document.getElementById('resultsTitle').textContent = 'Results: ' + activeElection.name;
+      loadResultsForId(activeElection.id);
+    }
+
+    function loadResultsForId(id) {
+      Promise.all([
+        fetch('/admin/results/' + id).then(function(r) { return r.json(); }),
+        fetch('/admin/stats/' + id).then(function(r) { return r.json(); })
+      ]).then(function(arr) {
+        var res = arr[0]; var stats = arr[1];
+        document.getElementById('rVoters').textContent = stats.totalVoters || 0;
+        document.getElementById('rCast').textContent   = stats.totalVotes  || 0;
+        document.getElementById('rTurn').textContent   = (stats.turnout   || 0) + '%';
+        document.getElementById('rCands').textContent  = stats.totalCandidates || 0;
+
+        var breakdown = res.breakdown || [];
+        var type = (res.election && res.election.type) ? res.election.type : '';
+        currentResultsType = type;
+        populateStateFilter(id);
+        var body = document.getElementById('resultsBody');
+
+        if (!breakdown.length) {
+          body.innerHTML = '<div style="text-align:center;padding:24px;color:var(--muted);">No votes cast yet.</div>';
+          return;
+        }
+        if (type === 'PM') renderPmResults(breakdown, body);
+        else if (type === 'CM') renderCmResults(breakdown, body);
+        else renderMunResults(breakdown, body);
+      }).catch(function(e) {
+        document.getElementById('resultsBody').innerHTML =
+          '<div style="text-align:center;padding:24px;color:var(--red);">Failed: ' + e.message + '</div>';
+      });
+    }
+
+    function renderPmResults(data, body) {
+      var states = {};
+      data.forEach(function(r) {
+        if (!states[r.state_name]) states[r.state_name] = {};
+        if (!states[r.state_name][r.constituency_name]) states[r.state_name][r.constituency_name] = [];
+        states[r.state_name][r.constituency_name].push(r);
+      });
+      var html = '';
+      Object.keys(states).forEach(function(state) {
+        html += '<div style="font-weight:700;color:var(--blue);padding:10px 0 4px;border-bottom:2px solid #bfdbfe;margin-bottom:8px;">' + state + '</div>';
+        Object.keys(states[state]).forEach(function(con) {
+          var cands = states[state][con];
+          var maxV = Math.max.apply(null, cands.map(function(c) { return parseInt(c.votes)||0; }));
+          html += '<div style="font-size:13px;font-weight:600;margin:8px 0 4px;">' + con + '</div>';
+          html += '<table class="rtable"><thead><tr><th>Candidate</th><th>Votes</th></tr></thead><tbody>';
+          cands.forEach(function(c) {
+            var w = (parseInt(c.votes)||0) === maxV && maxV > 0;
+            html += '<tr class="' + (w?'win':'') + '"><td>' + c.candidate_name + (w?' ★':'') + '</td><td>' + (c.votes||0) + '</td></tr>';
+          });
+          html += '</tbody></table>';
+        });
+      });
+      body.innerHTML = html;
+    }
+
+    function renderCmResults(data, body) {
+      var cs = {};
+      data.forEach(function(r) {
+        if (!cs[r.constituency_name]) cs[r.constituency_name] = [];
+        cs[r.constituency_name].push(r);
+      });
+      var html = '<table class="rtable"><thead><tr><th>Constituency</th><th>Candidate</th><th>Votes</th></tr></thead><tbody>';
+      Object.keys(cs).forEach(function(name) {
+        var cands = cs[name];
+        var maxV = Math.max.apply(null, cands.map(function(c) { return parseInt(c.votes)||0; }));
+        cands.forEach(function(c, i) {
+          var w = (parseInt(c.votes)||0) === maxV && maxV > 0;
+          html += '<tr class="' + (w?'win':'') + '"><td>' + (i===0?name:'') + '</td><td>' + c.candidate_name + (w?' ★':'') + '</td><td>' + (c.votes||0) + '</td></tr>';
+        });
+      });
+      html += '</tbody></table>';
+      body.innerHTML = html;
+    }
+
+    function renderMunResults(data, body) {
+      var tiers = {};
+      data.forEach(function(r) {
+        var k = 'Tier ' + (r.tier_number||'') + ': ' + (r.tier_name||'');
+        if (!tiers[k]) tiers[k] = { bg: r.bg_color||'#fff', cands: [] };
+        tiers[k].cands.push(r);
+      });
+      var html = '';
+      Object.keys(tiers).forEach(function(tn) {
+        var t = tiers[tn];
+        var maxV = Math.max.apply(null, t.cands.map(function(c) { return parseInt(c.votes)||0; }));
+        html += '<div style="background:' + t.bg + ';border-radius:8px;padding:14px;margin-bottom:12px;">';
+        html += '<div style="font-weight:700;font-size:14px;margin-bottom:8px;">' + tn + '</div>';
+        html += '<table class="rtable"><thead><tr><th>Candidate</th><th>Votes</th></tr></thead><tbody>';
+        t.cands.forEach(function(c) {
+          var w = (parseInt(c.votes)||0) === maxV && maxV > 0;
+          html += '<tr class="' + (w?'win':'') + '"><td>' + c.candidate_name + (w?' ★':'') + '</td><td>' + (c.votes||0) + '</td></tr>';
+        });
+        html += '</tbody></table></div>';
+      });
+      body.innerHTML = html || '<div style="padding:24px;color:var(--muted);text-align:center;">No results yet.</div>';
+    }
+
+    function loadChainStats() {
+      Promise.all([
+        fetch('/blockchain/validate').then(function(r) { return r.json(); }),
+        fetch('/blockchain').then(function(r) { return r.json(); })
+      ]).then(function(arr) {
+        var v = arr[0]; var c = arr[1];
+        document.getElementById('bcBlocks').textContent = c.length;
+        document.getElementById('bcVotes').textContent  = c.filter(function(b) { return b.voterId !== 'GENESIS'; }).length;
+        document.getElementById('bcValid').innerHTML    = v.valid
+          ? '<span class="vbdg ok">Valid</span>'
+          : '<span class="vbdg bad">Tampered!</span>';
+      }).catch(function() {});
+    }
+
+    function loadChain() {
+      var list = document.getElementById('chainList');
+      list.innerHTML = '<div style="padding:16px;color:var(--muted);">Loading...</div>';
+      fetch('/blockchain')
+        .then(function(r) { return r.json(); })
+        .then(function(chain) {
+          list.innerHTML = '';
+          chain.forEach(function(b, i) {
+            var div = document.createElement('div');
+            div.className = 'cblock' + (i===0?' genesis':'');
+            div.innerHTML = '<span class="bn">Block #' + (b.index!==undefined?b.index:i) + '</span> ' +
+              (b.voterId==='GENESIS'?'- Genesis block':'- Vote recorded') +
+              '<div class="hsh">Hash: ' + b.hash + '</div>' +
+              (b.previousHash?'<div class="hsh">Prev: ' + b.previousHash + '</div>':'');
+            list.appendChild(div);
+          });
+          loadChainStats();
+        })
+        .catch(function(e) {
+          list.innerHTML = '<div style="padding:16px;color:var(--red);">Failed: ' + e.message + '</div>';
+        });
+    }
+
+    function validateChain() {
+      fetch('/blockchain/validate')
+        .then(function(r) { return r.json(); })
+        .then(function(v) { alert(v.message || (v.valid ? 'Chain is valid!' : 'Chain tampered!')); loadChainStats(); })
+        .catch(function() { alert('Validation failed.'); });
+    }
+
+    function loadSettings() {
+      fetch('/settings/language')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          currentLang = data.language || 'EN';
+          document.getElementById('btnEN').classList.toggle('active', currentLang === 'EN');
+          document.getElementById('btnENTA').classList.toggle('active', currentLang === 'EN_TA');
+          document.getElementById('btnENHI').classList.toggle('active', currentLang === 'EN_HI');
+        }).catch(function() {});
+
+      var resetList = document.getElementById('resetList');
+      resetList.innerHTML = '';
+      allElections.forEach(function(e) {
+        if (!canManageElection(e)) return;
+        var div = document.createElement('div');
+        div.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--gray);border-radius:8px;';
+        div.innerHTML = '<span style="font-size:14px;font-weight:500;">' + e.name + '</span>';
+        var btn = document.createElement('button');
+        btn.className = 'bsm brs';
+        btn.textContent = 'Reset Votes';
+        btn.addEventListener('click', function() { resetElection(e.id, e.name); });
+        div.appendChild(btn);
+        resetList.appendChild(div);
+      });
+    }
+
+    function setLanguage(lang) {
+      fetch('/admin/settings/language', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: lang })
+      }).then(function() {
+        currentLang = lang;
+        document.getElementById('btnEN').classList.toggle('active', lang === 'EN');
+        document.getElementById('btnENTA').classList.toggle('active', lang === 'EN_TA');
+        document.getElementById('btnENHI').classList.toggle('active', lang === 'EN_HI');
+        var msgs = { EN:'Language set to English only.', EN_TA:'Language set to English + Tamil.', EN_HI:'Language set to English + Hindi.' };
+        showAlert('langSuc', msgs[lang] || 'Language updated.');
+      }).catch(function() {});
+    }
+
+    function resetElection(id, name) {
+      document.getElementById('resetErr').classList.remove('show');
+      document.getElementById('resetSuc').classList.remove('show');
+      if (!confirm('Reset ALL votes for "' + name + '"? This cannot be undone.')) return;
+      fetch('/admin/reset-election/' + id, { method: 'POST' })
+        .then(function(r) { return r.text(); })
+        .then(function(txt) { showAlert('resetSuc', txt); loadElections(); })
+        .catch(function() { showAlert('resetErr', 'Reset failed.'); });
+    }
+
+    function loadDataPanel() {
+      // Load states for voter form
+      fetch('/admin/data/states').then(function(r){return r.json();}).then(function(states){
+        var vSel = document.getElementById('vState');
+        var cSel = document.getElementById('cState');
+        states.forEach(function(s){
+          var o1 = document.createElement('option'); o1.value=s.id; o1.textContent=s.name; vSel.appendChild(o1);
+          var o2 = document.createElement('option'); o2.value=s.id; o2.textContent=s.name; cSel.appendChild(o2);
+        });
+      }).catch(function(){});
+      // Load elections fresh from server for candidate form
+      var cElec = document.getElementById('cElection');
+      cElec.innerHTML = '<option value="">Select election...</option>';
+      fetch('/admin/data/elections').then(function(r){return r.json();}).then(function(elections){
+        elections.forEach(function(e){
+          var o=document.createElement('option'); o.value=e.id; o.textContent=e.name+'  ['+e.type+']'; cElec.appendChild(o);
+        });
+      });
+    }
+
+    // ── 6-LEVEL CASCADE: State→District→LS/VS→Council→Panchayat→Ward ──
+    function resetSelect(id, placeholder) {
+      var sel = document.getElementById(id);
+      sel.innerHTML = '<option value="">'+placeholder+'</option>';
+    }
+
+    function vOnStateChange() {
+      var sid = document.getElementById('vState').value;
+      resetSelect('vLs','— select state first —');
+      resetSelect('vDistrict','— select state first —');
+      resetSelect('vVs','— select district first —');
+      resetSelect('vCouncil','— select VS constituency first —');
+      resetSelect('vPanchayat','— select council first —');
+      resetSelect('vWard','— select panchayat first —');
+      if (!sid) return;
+      // Load LS constituencies for state
+      fetch('/admin/data/constituencies?stateId='+sid+'&type=LS').then(function(r){return r.json();}).then(function(cs){
+        var sel=document.getElementById('vLs');
+        sel.innerHTML='<option value="">Select LS constituency...</option>';
+        cs.forEach(function(c){
+          var o=document.createElement('option'); o.value=c.id;
+          o.textContent=c.name+(c.district_name?' — '+c.district_name:'');
+          sel.appendChild(o);
+        });
+      });
+      // Load districts for state
+      fetch('/admin/data/districts?stateId='+sid).then(function(r){return r.json();}).then(function(ds){
+        var sel=document.getElementById('vDistrict');
+        sel.innerHTML='<option value="">Select district...</option>';
+        ds.forEach(function(d){
+          var o=document.createElement('option'); o.value=d.id; o.textContent=d.name; sel.appendChild(o);
+        });
+      });
+    }
+
+    function vOnDistrictChange() {
+      var did = document.getElementById('vDistrict').value;
+      resetSelect('vVs','— select district first —');
+      resetSelect('vCouncil','— select VS constituency first —');
+      resetSelect('vPanchayat','— select council first —');
+      resetSelect('vWard','— select panchayat first —');
+      if (!did) return;
+      fetch('/admin/data/vs-by-district?districtId='+did).then(function(r){return r.json();}).then(function(cs){
+        var sel=document.getElementById('vVs');
+        sel.innerHTML='<option value="">Select VS constituency...</option>';
+        if (!cs.length) sel.innerHTML='<option value="">No VS constituencies for this district</option>';
+        cs.forEach(function(c){
+          var o=document.createElement('option'); o.value=c.id;
+          o.textContent=c.name+(c.category&&c.category!='GEN'?' ['+c.category+']':'');
+          sel.appendChild(o);
+        });
+      });
+    }
+
+    function vOnVsChange() {
+      var vsId = document.getElementById('vVs').value;
+      resetSelect('vCouncil','— select VS constituency first —');
+      resetSelect('vPanchayat','— select council first —');
+      resetSelect('vWard','— select panchayat first —');
+      if (!vsId) return;
+      fetch('/admin/data/councils-by-vs?vsId='+vsId).then(function(r){return r.json();}).then(function(cs){
+        var sel=document.getElementById('vCouncil');
+        sel.innerHTML='<option value="">Select council/corporation...</option>';
+        if (!cs.length) sel.innerHTML='<option value="">No councils mapped to this VS constituency</option>';
+        cs.forEach(function(c){
+          var o=document.createElement('option'); o.value=c.id; o.textContent=c.name; sel.appendChild(o);
+        });
+      });
+    }
+
+    function vOnCouncilChange() {
+      var cid = document.getElementById('vCouncil').value;
+      resetSelect('vPanchayat','— select council first —');
+      resetSelect('vWard','— select panchayat first —');
+      if (!cid) return;
+      fetch('/admin/data/panchayats?councilId='+cid).then(function(r){return r.json();}).then(function(ps){
+        var sel=document.getElementById('vPanchayat');
+        sel.innerHTML='<option value="">Select panchayat...</option>';
+        if (!ps.length) sel.innerHTML='<option value="">No panchayats for this council</option>';
+        ps.forEach(function(p){ var o=document.createElement('option'); o.value=p.id; o.textContent=p.name; sel.appendChild(o); });
+      });
+    }
+
+    function vOnPanchayatChange() {
+      var pid = document.getElementById('vPanchayat').value;
+      resetSelect('vWard','— select panchayat first —');
+      if (!pid) return;
+      fetch('/admin/data/wards?panchayatId='+pid).then(function(r){return r.json();}).then(function(ws){
+        var sel=document.getElementById('vWard');
+        sel.innerHTML='<option value="">Select ward...</option>';
+        if (!ws.length) sel.innerHTML='<option value="">No wards for this panchayat</option>';
+        ws.forEach(function(w){ var o=document.createElement('option'); o.value=w.id; o.textContent=w.name+' (Ward '+w.ward_number+')'; sel.appendChild(o); });
+      });
+    }
+
+    // Legacy aliases
+    function loadConstituencies() { vOnStateChange(); }
+    function loadPanchayats() { vOnCouncilChange(); }
+    function loadWards() { vOnPanchayatChange(); }
+
+    function loadCandidateConstituencies() {
+      var sid = document.getElementById('cState').value;
+      var eid = document.getElementById('cElection').value;
+      var cSel = document.getElementById('cConstituency');
+      cSel.innerHTML='<option value="">Select constituency...</option>';
+      if (!sid || !eid) return;
+      // Get election type from dropdown text
+      var elecSel = document.getElementById('cElection');
+      var elecText = elecSel.options[elecSel.selectedIndex] ? elecSel.options[elecSel.selectedIndex].text : '';
+      var type = elecText.toUpperCase().indexOf('LOK SABHA') >= 0 || elecText.toUpperCase().indexOf('PM') >= 0 ? 'LS' : 'VS';
+      var elec = allElections.find(function(e){ return String(e.id)===String(eid); });
+      if (elec) type = elec.type === 'PM' ? 'LS' : 'VS';
+      fetch('/admin/data/constituencies?stateId='+sid+'&type='+type).then(function(r){return r.json();}).then(function(cs){
+        cs.forEach(function(c){ var o=document.createElement('option');o.value=c.id;o.textContent=c.name+(c.district_name?' ('+c.district_name+')':'');cSel.appendChild(o); });
+      }).catch(function(e){ console.error('Constituency load error:', e); });
+    }
+
+    function previewPhoto(input, previewId) {
+      var preview = document.getElementById(previewId);
+      if (!input.files || !input.files[0]) { preview.style.display='none'; return; }
+      var reader = new FileReader();
+      reader.onload = function(e) { preview.src=e.target.result; preview.style.display='block'; };
+      reader.readAsDataURL(input.files[0]);
+    }
+
+    // ── WEBAUTHN FINGERPRINT ENROLLMENT ─────────────────────────────
+    var webAuthnCredentialId = null;
+
+    async function enrollFingerprint() {
+      var btn = document.getElementById('fpEnrollBtn');
+      var status = document.getElementById('fpStatus');
+      var info = document.getElementById('fpInfo');
+      var voterId = document.getElementById('vVoterId').value.trim() || ('TEMP-' + Date.now());
+
+      if (!window.PublicKeyCredential) {
+        status.textContent = 'WebAuthn not supported in this browser.';
+        status.style.color = 'var(--red)';
+        return;
+      }
+
+      try {
+        btn.textContent = '⏳ Scanning...';
+        btn.disabled = true;
+        status.textContent = 'Please scan your fingerprint...';
+        status.style.color = 'var(--blue)';
+
+        // WebAuthn registration (creates a new credential using platform authenticator = laptop fingerprint)
+        var challenge = new Uint8Array(32);
+        window.crypto.getRandomValues(challenge);
+
+        var credential = await navigator.credentials.create({
+          publicKey: {
+            challenge: challenge,
+            rp: { name: 'E-Voting System', id: window.location.hostname },
+            user: {
+              id: new TextEncoder().encode(voterId),
+              name: voterId + '@evoting.local',
+              displayName: document.getElementById('vName').value || voterId
+            },
+            pubKeyCredParams: [
+              { type: 'public-key', alg: -7  },   // ES256
+              { type: 'public-key', alg: -257 }   // RS256
+            ],
+            authenticatorSelection: {
+              authenticatorAttachment: 'platform',  // Use built-in biometric (laptop fingerprint)
+              requireResidentKey: false,
+              userVerification: 'required'           // Requires biometric verification
+            },
+            timeout: 60000,
+            attestation: 'none'
+          }
+        });
+
+        // Store credential ID as the "fingerprint template"
+        webAuthnCredentialId = credential.id;
+        var credIdB64 = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
+        document.getElementById('vFingerprint').value = credIdB64;
+
+        btn.textContent = '✓ Fingerprint Enrolled';
+        btn.className = 'bsm ben';
+        status.textContent = 'Enrolled ✓';
+        status.style.color = 'var(--green)';
+        info.style.display = 'block';
+
+      } catch (err) {
+        btn.textContent = '🖐 Scan Fingerprint (WebAuthn)';
+        btn.disabled = false;
+        if (err.name === 'NotAllowedError') {
+          status.textContent = 'Cancelled or no biometric device found.';
+        } else if (err.name === 'NotSupportedError') {
+          status.textContent = 'Platform authenticator not available.';
+        } else {
+          status.textContent = 'Error: ' + err.message;
+        }
+        status.style.color = 'var(--red)';
+      }
+    }
+
+    function fileToBase64(inputId) {
+      return new Promise(function(resolve) {
+        var input = document.getElementById(inputId);
+        if (!input || !input.files || !input.files[0]) { resolve(null); return; }
+        var reader = new FileReader();
+        reader.onload = function(e) { resolve(e.target.result); };
+        reader.readAsDataURL(input.files[0]);
+      });
+    }
+
+    async function addVoter() {
+      var body = {
+        voterId: document.getElementById('vVoterId').value.trim(),
+        name:    document.getElementById('vName').value.trim(),
+        nfcCardId: document.getElementById('vNfc').value.trim() || null,
+        aadhaarNumber: document.getElementById('vAadhaar').value.trim() || null,
+        stateId: document.getElementById('vState').value || null,
+        lsConstituencyId: document.getElementById('vLs').value || null,
+        vsConstituencyId: document.getElementById('vVs').value || null,
+        councilId:   document.getElementById('vCouncil').value   || null,
+        panchayatId: document.getElementById('vPanchayat').value || null,
+        wardId:      document.getElementById('vWard').value      || null
+      };
+      if (!body.voterId || !body.name) { showAlert('voterErr','Voter ID and Name are required.'); return; }
+      // Attach photo if selected
+      var photoB64 = await fileToBase64('vPhoto');
+      if (photoB64) body.photoBase64 = photoB64;
+      // Attach fingerprint if filled
+      var fp = document.getElementById('vFingerprint').value.trim();
+      if (fp) body.fingerprintBase64 = fp;
+      fetch('/admin/data/add-voter',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+        .then(function(r){return r.json();}).then(function(d){
+          if(d.success){
+            showAlert('voterSuc', d.message + (photoB64?' [Photo saved]':'') + (fp?' [Fingerprint enrolled]':''));
+            document.getElementById('vVoterId').value='';document.getElementById('vName').value='';
+            document.getElementById('vPhotoPreview').style.display='none';
+            document.getElementById('vFingerprint').value='';
+          } else showAlert('voterErr',d.message);
+        }).catch(function(e){ showAlert('voterErr','Error: '+e.message); });
+    }
+
+    async function addCandidate() {
+      var body = {
+        name:  document.getElementById('cName').value.trim(),
+        party: document.getElementById('cParty').value.trim(),
+        nameTa:  document.getElementById('cNameTa').value.trim() || null,
+        partyTa: document.getElementById('cPartyTa').value.trim() || null,
+        electionId:     document.getElementById('cElection').value || null,
+        stateId:        document.getElementById('cState').value || null,
+        constituencyId: document.getElementById('cConstituency').value || null,
+        photoUrl:   document.getElementById('cPhoto').value.trim()  || null,
+        symbolUrl:  document.getElementById('cSymbol').value.trim() || null,
+        partyColor: document.getElementById('cColor').value         || '#1a3c6e'
+      };
+      if (!body.name || !body.party || !body.electionId) { showAlert('candErr','Name, Party and Election are required.'); return; }
+      // Attach images
+      var photoB64 = await fileToBase64('cPhotoFile');
+      if (photoB64) body.photoBase64 = photoB64;
+      var symbolB64 = await fileToBase64('cSymbolFile');
+      if (symbolB64) body.symbolBase64 = symbolB64;
+      fetch('/admin/data/add-candidate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+        .then(function(r){return r.json();}).then(function(d){
+          if(d.success){
+            showAlert('candSuc', d.message + (photoB64?' [Photo]':'') + (symbolB64?' [Symbol]':''));
+            document.getElementById('cName').value='';document.getElementById('cParty').value='';
+            document.getElementById('cPhotoPreview').style.display='none';
+            document.getElementById('cSymbolPreview').style.display='none';
+          } else showAlert('candErr',d.message);
+        }).catch(function(e){ showAlert('candErr','Error: '+e.message); });
+    }
+
+    function loadEditPanel() {
+      // Load elections for candidate filter
+      var esel = document.getElementById('editCandElec');
+      esel.innerHTML = '<option value="">All elections...</option>';
+      fetch('/admin/data/elections').then(function(r){return r.json();}).then(function(es){
+        es.forEach(function(e){ var o=document.createElement('option');o.value=e.id;o.textContent=e.name;esel.appendChild(o); });
+      });
+      // Load councils for local body form
+      fetch('/admin/data/councils').then(function(r){return r.json();}).then(function(cs){
+        var s=document.getElementById('lbCouncil');s.innerHTML='<option value="">Select council...</option>';
+        cs.forEach(function(c){ var o=document.createElement('option');o.value=c.id;o.textContent=c.name;s.appendChild(o); });
+      });
+      // Load panchayats
+      fetch('/admin/data/panchayats').then(function(r){return r.json();}).then(function(ps){
+        var s=document.getElementById('lbPanch');s.innerHTML='<option value="">Select panchayat...</option>';
+        ps.forEach(function(p){ var o=document.createElement('option');o.value=p.id;o.textContent=p.name;s.appendChild(o); });
+      });
+      loadVoterList();
+    }
+
+    function loadVoterList() {
+      var list = document.getElementById('voterEditList');
+      list.innerHTML = '<div style="padding:14px;color:var(--muted);">Loading...</div>';
+      fetch('/admin/data/voters').then(function(r){return r.json();}).then(function(voters){
+        renderVoterList(voters, list);
+      }).catch(function(){ list.innerHTML='<div style="padding:14px;color:var(--red);">Failed to load.</div>'; });
+    }
+
+    function searchVoters(q) {
+      if (!q || q.length < 2) return;
+      fetch('/admin/data/voters').then(function(r){return r.json();}).then(function(voters){
+        var filtered = voters.filter(function(v){
+          var id = (v.voter_id||'').toLowerCase();
+          var nm = (v.voter_name||v.name||'').toLowerCase();
+          return id.indexOf(q.toLowerCase())>=0 || nm.indexOf(q.toLowerCase())>=0;
+        });
+        renderVoterList(filtered, document.getElementById('voterEditList'));
+      });
+    }
+
+    function renderVoterList(voters, container) {
+      if (!voters.length){ container.innerHTML='<div style="padding:14px;color:var(--muted);">No voters found.</div>'; return; }
+      var html = '<table style="width:100%;border-collapse:collapse;font-size:13px;">' +
+        '<thead><tr style="background:#f8faff;">' +
+        '<th style="padding:8px 12px;text-align:left;border-bottom:2px solid var(--border);">Voter ID</th>' +
+        '<th style="padding:8px 12px;text-align:left;border-bottom:2px solid var(--border);">Name</th>' +
+        '<th style="padding:8px 12px;text-align:left;border-bottom:2px solid var(--border);">State</th>' +
+        '<th style="padding:8px 12px;text-align:left;border-bottom:2px solid var(--border);">PM</th>' +
+        '<th style="padding:8px 12px;text-align:left;border-bottom:2px solid var(--border);">CM</th>' +
+        '<th style="padding:8px 12px;text-align:left;border-bottom:2px solid var(--border);">Actions</th>' +
+        '</tr></thead><tbody>';
+      voters.forEach(function(v) {
+        var vid = v.voter_id || '';
+        html += '<tr style="border-bottom:1px solid var(--border);">' +
+          '<td style="padding:8px 12px;font-weight:600;">' + vid + '</td>' +
+          '<td style="padding:8px 12px;">' + (v.voter_name||v.name||'-') + '</td>' +
+          '<td style="padding:8px 12px;">' + (v.state||'-') + '</td>' +
+          '<td style="padding:8px 12px;color:'+(v.pm_status==='Voted'?'var(--green)':'var(--muted)')+'">' + (v.pm_status||'-') + '</td>' +
+          '<td style="padding:8px 12px;color:'+(v.cm_status==='Voted'?'var(--green)':'var(--muted)')+'">' + (v.cm_status||'-') + '</td>' +
+          '<td style="padding:8px 12px;">' +
+            '<button class="bsm brs" id="del-voter-' + vid + '" style="font-size:12px;">Delete</button>' +
+          '</td></tr>';
+      });
+      html += '</tbody></table>';
+      container.innerHTML = html;
+      voters.forEach(function(v) {
+        var btn = document.getElementById('del-voter-' + (v.voter_id||''));
+        if (btn) btn.addEventListener('click', function() {
+          if (!confirm('Delete voter ' + v.voter_id + '?')) return;
+          fetch('/admin/data/voter/' + v.voter_id, {method:'DELETE'})
+            .then(function(r){return r.json();}).then(function(d){
+              if(d.success){ showAlert('editVoterSuc',d.message); loadVoterList(); }
+              else showAlert('editVoterErr',d.message);
+            });
+        });
+      });
+    }
+
+    function loadCandidateList() {
+      var eid = document.getElementById('editCandElec').value;
+      var url = '/admin/data/candidates' + (eid ? '?electionId='+eid : '');
+      var list = document.getElementById('candEditList');
+      list.innerHTML = '<div style="padding:14px;color:var(--muted);">Loading...</div>';
+      fetch(url).then(function(r){return r.json();}).then(function(cands){
+        if (!cands.length){ list.innerHTML='<div style="padding:14px;color:var(--muted);">No candidates.</div>'; return; }
+        var html='<table style="width:100%;border-collapse:collapse;font-size:13px;">' +
+          '<thead><tr style="background:#f8faff;">' +
+          '<th style="padding:8px 12px;text-align:left;border-bottom:2px solid var(--border);">Name</th>' +
+          '<th style="padding:8px 12px;text-align:left;border-bottom:2px solid var(--border);">Party</th>' +
+          '<th style="padding:8px 12px;text-align:left;border-bottom:2px solid var(--border);">Election</th>' +
+          '<th style="padding:8px 12px;text-align:left;border-bottom:2px solid var(--border);">Constituency</th>' +
+          '<th style="padding:8px 12px;border-bottom:2px solid var(--border);">Action</th>' +
+          '</tr></thead><tbody>';
+        cands.forEach(function(c){
+          html += '<tr style="border-bottom:1px solid var(--border);">' +
+            '<td style="padding:8px 12px;">' + (c.name||'-') + '</td>' +
+            '<td style="padding:8px 12px;">' + (c.party||'-') + '</td>' +
+            '<td style="padding:8px 12px;font-size:11px;">' + (c.election_name||'-') + '</td>' +
+            '<td style="padding:8px 12px;font-size:11px;">' + (c.constituency_name||'All') + '</td>' +
+            '<td style="padding:8px 12px;">' +
+              '<button class="bsm brs" id="del-cand-'+c.id+'" style="font-size:12px;">Delete</button>' +
+            '</td></tr>';
+        });
+        html += '</tbody></table>';
+        list.innerHTML = html;
+        cands.forEach(function(c){
+          var btn = document.getElementById('del-cand-'+c.id);
+          if(btn) btn.addEventListener('click', function(){
+            if(!confirm('Delete candidate '+c.name+'?')) return;
+            fetch('/admin/data/candidate/'+c.id,{method:'DELETE'}).then(function(r){return r.json();}).then(function(d){
+              if(d.success){showAlert('editCandSuc',d.message);loadCandidateList();}
+              else showAlert('editCandErr',d.message);
+            });
+          });
+        });
+      });
+    }
+
+    function toggleLbFields() {
+      var type = document.getElementById('lbType').value;
+      document.getElementById('lbCouncilDiv').style.display = type==='panchayat' ? 'block' : 'none';
+      document.getElementById('lbPanchDiv').style.display   = type==='ward'       ? 'block' : 'none';
+      document.getElementById('lbWardNumDiv').style.display = type==='ward'       ? 'block' : 'none';
+    }
+
+    function addLocalBody() {
+      var type = document.getElementById('lbType').value;
+      var body = { type:type, name:document.getElementById('lbName').value.trim() };
+      if (type==='panchayat') body.councilId = document.getElementById('lbCouncil').value;
+      if (type==='ward') {
+        body.panchayatId = document.getElementById('lbPanch').value;
+        body.wardNumber  = document.getElementById('lbWardNum').value;
+      }
+      fetch('/admin/data/add-local-body',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+        .then(function(r){return r.json();}).then(function(d){
+          if(d.success) showAlert('lbSuc',d.message);
+          else showAlert('lbErr',d.message);
+        });
+    }
+
+    // ── ROLE-BASED RESULTS ──────────────────────────────────────────
+    var currentResultsElecId = null;
+    var currentResultsType   = null;
+    var currentResultsStateId = null;
+
+    function loadResults() {
+      if (currentResultsElecId) { loadResultsForElection(currentResultsElecId); return; }
+      if (!activeElection) {
+        document.getElementById('resultsBody').innerHTML = '<div style="text-align:center;padding:32px;color:var(--muted);">No election selected. Click Results on an election card.</div>';
+        return;
+      }
+      document.getElementById('resultsTitle').textContent = 'Results: ' + activeElection.name;
+      loadResultsForElection(activeElection.id);
+    }
+
+    function viewResults(id, name) {
+      currentResultsElecId = id;
+      currentResultsStateId = null;
+      showTab('results');
+      document.getElementById('resultsTitle').textContent = 'Results: ' + name;
+      loadResultsForElection(id);
+    }
+
+    function loadResultsForId(id) { loadResultsForElection(id); }
+
+    function loadResultsForElection(id) {
+      currentResultsElecId = id;
+      currentResultsStateId = null;
+      var body = document.getElementById('resultsBody');
+      body.innerHTML = '<div style="text-align:center;padding:32px;color:var(--muted);">Loading...</div>';
+
+      Promise.all([
+        fetch('/admin/results/'+id).then(function(r){return r.json();}),
+        fetch('/admin/stats/'+id).then(function(r){return r.json();})
+      ]).then(function(arr){
+        var res=arr[0]; var stats=arr[1];
+        document.getElementById('rVoters').textContent = stats.totalVoters||0;
+        document.getElementById('rCast').textContent   = stats.totalVotes||0;
+        document.getElementById('rTurn').textContent   = (stats.turnout||0)+'%';
+        document.getElementById('rCands').textContent  = stats.totalCandidates||0;
+
+        var type = (res.election&&res.election.type)?res.election.type:'';
+        currentResultsType = type;
+
+        // Hide all filter bars first
+        document.getElementById('stateFilterBar').style.display='none';
+        document.getElementById('munTierBar').style.display='none';
+
+        if (type==='PM') {
+          // BALA: show all 543 constituencies grouped by state
+          renderPmFullResults(res.breakdown||[], body);
+        } else if (type==='CM') {
+          // ARUN: show state list, click → district-wise
+          document.getElementById('stateFilterBar').style.display='flex';
+          populateStateFilter(id);
+          renderCmStateList(res.breakdown||[], body);
+        } else if (type==='MUNICIPALITY') {
+          // DEEPAK: show 4-tier tabs
+          document.getElementById('munTierBar').style.display='block';
+          renderMunicipalityResults(res.breakdown||[], body);
+        }
+      }).catch(function(e){
+        body.innerHTML = '<div style="text-align:center;padding:24px;color:var(--red);">Failed: '+e.message+'</div>';
+      });
+    }
+
+    // ── PM: ALL 543 CONSTITUENCIES GROUPED BY STATE ──────────────────
+    function renderPmFullResults(data, body) {
+      if (!data.length) { body.innerHTML='<div style="text-align:center;padding:24px;color:var(--muted);">No votes cast yet.</div>'; return; }
+      // Group by state then constituency
+      var states = {};
+      data.forEach(function(r){
+        var st = r.state_name||'Unknown';
+        if (!states[st]) states[st]={constituencies:{}};
+        var con = r.constituency_name||'Unknown';
+        if (!states[st].constituencies[con]) states[st].constituencies[con]=[];
+        states[st].constituencies[con].push(r);
+      });
+
+      var html = '<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Showing all constituencies. Click a state header to expand/collapse.</div>';
+      Object.keys(states).sort().forEach(function(stateName){
+        var stateData = states[stateName];
+        var stateId = 'state-'+stateName.replace(/[^a-z0-9]/gi,'');
+        var constCount = Object.keys(stateData.constituencies).length;
+        // Count votes in this state
+        var stateVotes = 0;
+        Object.values(stateData.constituencies).forEach(function(cands){ cands.forEach(function(c){ stateVotes+=parseInt(c.votes)||0; }); });
+
+        html += '<div class="pm-state-block">';
+        html += '<div class="pm-state-hdr" data-sid="' + stateId + '" onclick="toggleState(this.dataset.sid)">';
+        html += '<div style="display:flex;align-items:center;gap:10px;">';
+        html += '<span style="font-size:15px;font-weight:700;color:var(--blue);">'+stateName+'</span>';
+        html += '<span class="bdg bdg-pm">'+constCount+' seats</span>';
+        html += '<span style="font-size:12px;color:var(--muted);">'+stateVotes+' votes cast</span>';
+        html += '</div><span id="arr-'+stateId+'" style="color:var(--muted);">▼</span></div>';
+        html += '<div id="'+stateId+'" style="display:none;">';
+        html += '<table class="rtable"><thead><tr><th>#</th><th>Constituency</th><th>Candidate</th><th>Party</th><th>Votes</th><th>Winner</th></tr></thead><tbody>';
+
+        Object.keys(stateData.constituencies).sort().forEach(function(conName){
+          var cands = stateData.constituencies[conName];
+          var maxV = Math.max.apply(null, cands.map(function(c){return parseInt(c.votes)||0;}));
+          var winner = cands.find(function(c){return (parseInt(c.votes)||0)===maxV&&maxV>0;});
+          cands.forEach(function(c,i){
+            var w = (parseInt(c.votes)||0)===maxV&&maxV>0;
+            html += '<tr class="'+(w?'win':'')+'"><td style="color:var(--muted);font-size:11px;">'+(i===0?cands.length:'')+'</td>';
+            html += '<td>'+(i===0?conName:'')+'</td>';
+            html += '<td>'+c.candidate_name+'</td>';
+            html += '<td style="font-size:11px;color:var(--muted);">'+(c.party||'-')+'</td>';
+            html += '<td style="font-weight:'+(w?'700':'400')+';color:'+(w?'var(--green)':'inherit')+'">'+(c.votes||0)+'</td>';
+            html += '<td>'+(w?'<span class="vbdg ok">✓ Leading</span>':'')+'</td></tr>';
+          });
+        });
+        html += '</tbody></table></div></div>';
+      });
+      body.innerHTML = html;
+    }
+
+    function toggleState(id) {
+      var el = document.getElementById(id);
+      var arr = document.getElementById('arr-'+id);
+      if (!el) return;
+      var hidden = el.style.display==='none';
+      el.style.display = hidden?'block':'none';
+      if (arr) arr.textContent = hidden?'▲':'▼';
+    }
+
+    // ── CM: STATE LIST → DISTRICT-WISE ──────────────────────────────
+    function renderCmStateList(data, body) {
+      if (!data.length) { body.innerHTML='<div style="text-align:center;padding:24px;color:var(--muted);">No votes cast yet. Select a state from the dropdown for detailed view.</div>'; return; }
+      // Group by state
+      var states = {};
+      data.forEach(function(r){
+        var st = r.state_name||(r.district_name?r.district_name+' State':'Unknown');
+        if (!states[st]) states[st]={votes:0,seats:new Set()};
+        states[st].votes += parseInt(r.votes)||0;
+        states[st].seats.add(r.constituency_name);
+      });
+
+      var html = '<div style="font-size:13px;font-weight:600;color:var(--blue);margin-bottom:12px;">Select a state from the dropdown above to see district-wise constituency results ↑</div>';
+      html += '<table class="rtable"><thead><tr><th>State</th><th>Constituencies with Votes</th><th>Total Votes Cast</th><th>View Details</th></tr></thead><tbody>';
+      Object.keys(states).sort().forEach(function(sn){
+        var sd = states[sn];
+        html += '<tr><td style="font-weight:600;">'+sn+'</td><td>'+sd.seats.size+'</td><td>'+sd.votes+'</td>';
+        html += '<td><button class="bsm bre" data-state="' + sn.replace(/"/g,"&quot;") + '" onclick="selectStateByName(this.dataset.state)" style="font-size:12px;">District View →</button></td></tr>';
+      });
+      html += '</tbody></table>';
+      body.innerHTML = html;
+    }
+
+    function selectStateByName(stateName) {
+      var sel = document.getElementById('stateFilter');
+      for (var i=0; i<sel.options.length; i++) {
+        if (sel.options[i].text === stateName) { sel.value=sel.options[i].value; filterByState(); break; }
+      }
+    }
+
+    function filterByState() {
+      var stateId = document.getElementById('stateFilter').value;
+      var sel = document.getElementById('stateFilter');
+      var stateName = stateId ? sel.options[sel.selectedIndex].text : '';
+      document.getElementById('btnBackToStates').style.display = stateId?'inline-block':'none';
+      document.getElementById('stateBreadcrumb').textContent = stateId?'Showing: '+stateName:'';
+      if (!stateId) { loadResultsForElection(currentResultsElecId); return; }
+      currentResultsStateId = stateId;
+      var body = document.getElementById('resultsBody');
+      body.innerHTML = '<div style="text-align:center;padding:24px;color:var(--muted);">Loading '+stateName+'...</div>';
+      fetch('/admin/results/'+currentResultsElecId+'/state/'+stateId)
+        .then(function(r){return r.json();})
+        .then(function(data){ renderCmDistrictResults(data, body, stateName); })
+        .catch(function(e){ body.innerHTML='<div style="color:var(--red);">Error: '+e.message+'</div>'; });
+    }
+
+    function clearStateFilter() {
+      document.getElementById('stateFilter').value='';
+      filterByState();
+    }
+
+    function populateStateFilter(electionId) {
+      fetch('/admin/results/'+electionId+'/states').then(function(r){return r.json();}).then(function(states){
+        var sel = document.getElementById('stateFilter');
+        sel.innerHTML = '<option value="">— Select a state for district-wise view —</option>';
+        states.forEach(function(s){ var o=document.createElement('option');o.value=s.id;o.textContent=s.name;sel.appendChild(o); });
+      });
+    }
+
+    function renderCmDistrictResults(data, body, stateName) {
+      if (!data.length) { body.innerHTML='<div style="text-align:center;padding:24px;color:var(--muted);">No votes cast yet in '+stateName+'.</div>'; return; }
+      var districts = {};
+      data.forEach(function(r){
+        var k = r.district_name||'Other';
+        if (!districts[k]) districts[k]=[];
+        districts[k].push(r);
+      });
+      var html = '<div style="font-size:13px;font-weight:700;color:var(--blue);margin-bottom:12px;">'+stateName+' — District-wise Constituency Results</div>';
+      Object.keys(districts).sort().forEach(function(dist){
+        var rows = districts[dist];
+        var cs = {};
+        rows.forEach(function(r){ if (!cs[r.constituency_name]) cs[r.constituency_name]=[]; cs[r.constituency_name].push(r); });
+        html += '<div style="margin-bottom:14px;"><div style="font-weight:700;color:var(--blue);padding:8px 12px;background:#f0f4ff;border-left:4px solid var(--blue);border-radius:0 6px 6px 0;margin-bottom:6px;">🏘 '+dist+'</div>';
+        html += '<table class="rtable"><thead><tr><th>Constituency</th><th>Candidate</th><th>Party</th><th>Votes</th><th>Status</th></tr></thead><tbody>';
+        Object.keys(cs).sort().forEach(function(con){
+          var cands = cs[con];
+          var maxV = Math.max.apply(null,cands.map(function(c){return parseInt(c.votes)||0;}));
+          cands.forEach(function(c,i){
+            var w = (parseInt(c.votes)||0)===maxV&&maxV>0;
+            html += '<tr class="'+(w?'win':'')+'"><td>'+(i===0?con:'')+'</td>';
+            html += '<td>'+c.candidate_name+'</td>';
+            html += '<td style="font-size:11px;color:var(--muted);">'+(c.party||'-')+'</td>';
+            html += '<td style="font-weight:'+(w?'700':'400')+';color:'+(w?'var(--green)':'inherit')+'">'+(c.votes||0)+'</td>';
+            html += '<td>'+(w?'<span class="vbdg ok">Leading ✓</span>':'')+'</td></tr>';
+          });
+        });
+        html += '</tbody></table></div>';
+      });
+      body.innerHTML = html;
+    }
+
+    // ── MUNICIPALITY: 4-TIER RESULTS ─────────────────────────────────
+    function renderMunicipalityResults(data, body) {
+      var tierColors = { 1:'#ffffff', 2:'#fce7f3', 3:'#fef9c3', 4:'#fef9c3' };
+      var tierLabels = { 1:'Tier 1 — Village / Gram Panchayat', 2:'Tier 2 — Panchayat Samiti (Block)', 3:'Tier 3 — Zilla Parishad (District)', 4:'Tier 4 — Mahakuma Parishad' };
+
+      // Build tier buttons
+      var btnContainer = document.getElementById('munTierBtns');
+      btnContainer.innerHTML = '';
+      ['All',1,2,3,4].forEach(function(t){
+        var btn = document.createElement('button');
+        btn.className = 'bsm '+(t==='All'?'ben':'bre');
+        btn.id = 'munTierBtn-'+t;
+        btn.textContent = t==='All'?'All Tiers':'Tier '+t+': '+(tierLabels[t]||'').split('—')[1].trim();
+        btn.addEventListener('click', function(){ filterMunTier(t, data, body); });
+        btnContainer.appendChild(btn);
+      });
+
+      // Show all tiers by default
+      renderMunTierData(data, body, 'All', tierColors, tierLabels);
+    }
+
+    function filterMunTier(tier, data, body) {
+      ['All',1,2,3,4].forEach(function(t){
+        var b = document.getElementById('munTierBtn-'+t);
+        if (b) b.className = 'bsm '+(t===tier?'ben':'bre');
+      });
+      renderMunTierData(data, body, tier,
+        {1:'#ffffff',2:'#fce7f3',3:'#fef9c3',4:'#fef9c3'},
+        {1:'Tier 1 — Village / Gram Panchayat',2:'Tier 2 — Panchayat Samiti',3:'Tier 3 — Zilla Parishad',4:'Tier 4 — Mahakuma Parishad'});
+    }
+
+    function renderMunTierData(data, body, filterTier, tierColors, tierLabels) {
+      if (!data.length) { body.innerHTML='<div style="text-align:center;padding:24px;color:var(--muted);">No votes cast yet.</div>'; return; }
+      var tiers = {};
+      data.forEach(function(r){
+        var tn = r.tier_number||1;
+        if (!tiers[tn]) tiers[tn]={name:r.tier_name||tierLabels[tn]||'Tier '+tn, bg:r.bg_color||tierColors[tn]||'#fff', cands:[]};
+        tiers[tn].cands.push(r);
+      });
+      var html = '';
+      var tierNums = Object.keys(tiers).sort();
+      tierNums.forEach(function(tn){
+        var ti = parseInt(tn);
+        if (filterTier!=='All' && ti!==filterTier) return;
+        var t = tiers[tn];
+        var maxV = Math.max.apply(null, t.cands.map(function(c){return parseInt(c.votes)||0;}));
+        var totalVotes = t.cands.reduce(function(a,c){return a+(parseInt(c.votes)||0);},0);
+        html += '<div style="background:'+t.bg+';border-radius:10px;padding:16px;margin-bottom:14px;border:1px solid var(--border);">';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">';
+        html += '<div><div style="font-weight:700;font-size:14px;">'+tierLabels[tn]+'</div>';
+        html += '<div style="font-size:12px;color:var(--muted);">Total votes in this tier: '+totalVotes+'</div></div>';
+        html += '<span class="bdg bdg-mun">TIER '+tn+'</span></div>';
+        html += '<table class="rtable" style="background:#fff;"><thead><tr><th>Candidate</th><th>Votes</th><th>%</th><th>Status</th></tr></thead><tbody>';
+        // Sort by votes descending
+        var sorted = t.cands.slice().sort(function(a,b){return (parseInt(b.votes)||0)-(parseInt(a.votes)||0);});
+        sorted.forEach(function(c){
+          var votes = parseInt(c.votes)||0;
+          var pct = totalVotes>0?Math.round(votes*100/totalVotes):0;
+          var w = votes===maxV&&maxV>0;
+          html += '<tr class="'+(w?'win':'')+'"><td>'+c.candidate_name+'</td>';
+          html += '<td style="font-weight:'+(w?'700':'400')+';color:'+(w?'var(--green)':'inherit')+'">'+votes+'</td>';
+          html += '<td><div style="display:flex;align-items:center;gap:6px;"><div style="flex:1;height:8px;background:#e5e7eb;border-radius:4px;"><div style="height:8px;border-radius:4px;background:'+(w?'var(--green)':'#93c5fd')+';width:'+pct+'%"></div></div><span style="font-size:11px;color:var(--muted);">'+pct+'%</span></div></td>';
+          html += '<td>'+(w?'<span class="vbdg ok">Leading ✓</span>':'')+'</td></tr>';
+        });
+        html += '</tbody></table></div>';
+      });
+      body.innerHTML = html || '<div style="text-align:center;padding:24px;color:var(--muted);">No data for this tier.</div>';
+    }
+
+
+
+    // ── LOCATIONS PANEL (Dinesh - full CRUD) ─────────────────────────
+    var currentLocTab = 'states';
+    var locFormMode = 'add';
+    var locEditId = null;
+
+    var locConfig = {
+      states:     { label:'State / UT',     api:'/admin/data/states',  addApi:'/admin/data/add-state',
+        fields:[{id:'name',label:'Name *',req:true},{id:'nameTa',label:'Tamil Name'},{id:'nameHi',label:'Hindi Name'},
+                {id:'type',label:'Type',type:'select',opts:['STATE','UT']},{id:'lsSeats',label:'LS Seats',type:'number'},{id:'vsSeats',label:'VS Seats',type:'number'}],
+        cols:['name','name_ta','name_hi','type','ls_seats','vs_seats'],
+        editApi:function(id){return '/admin/data/state/'+id;},
+        deleteApi:function(id){return '/admin/data/state/'+id;} },
+      districts:  { label:'District',        api:'/admin/data/districts', addApi:'/admin/data/add-district',
+        fields:[{id:'name',label:'Name *',req:true},{id:'stateId',label:'State *',type:'state-select',req:true}],
+        cols:['name'],
+        editApi:function(id){return '/admin/data/district/'+id;},
+        deleteApi:function(id){return '/admin/data/district/'+id;} },
+      ls:         { label:'LS Constituency', api:null, addApi:'/admin/data/add-constituency',
+        fields:[{id:'name',label:'Name *',req:true},{id:'stateId',label:'State *',type:'state-select',req:true},
+                {id:'number',label:'Seat Number',type:'number'},{id:'category',label:'Category',type:'select',opts:['GEN','SC','ST']}],
+        cols:['name','district_name','category','number'],
+        editApi:function(id){return '/admin/data/constituency/'+id;},
+        deleteApi:function(id){return '/admin/data/constituency/'+id;} },
+      vs:         { label:'VS Constituency', api:null, addApi:'/admin/data/add-constituency',
+        fields:[{id:'name',label:'Name *',req:true},{id:'stateId',label:'State *',type:'state-select',req:true},
+                {id:'districtName',label:'District Name',req:true},{id:'number',label:'Seat Number',type:'number'},
+                {id:'category',label:'Category',type:'select',opts:['GEN','SC','ST']}],
+        cols:['name','district_name','category','number'],
+        editApi:function(id){return '/admin/data/constituency/'+id;},
+        deleteApi:function(id){return '/admin/data/constituency/'+id;} },
+      councils:   { label:'Council',         api:'/admin/data/councils', addApi:'/admin/data/add-local-body',
+        fields:[{id:'name',label:'Name *',req:true},{id:'type',label:'Type',type:'hidden',value:'council'},
+                {id:'districtId',label:'District ID',type:'number'},{id:'vsConstituencyId',label:'VS Constituency ID',type:'number'}],
+        cols:['name'],
+        editApi:function(id){return '/admin/data/council/'+id;},
+        deleteApi:function(id){return '/admin/data/council/'+id;} },
+      panchayats: { label:'Panchayat',       api:'/admin/data/panchayats', addApi:'/admin/data/add-local-body',
+        fields:[{id:'name',label:'Name *',req:true},{id:'type',label:'Type',type:'hidden',value:'panchayat'},
+                {id:'councilId',label:'Council',type:'council-select',req:true}],
+        cols:['name'],
+        editApi:function(id){return '/admin/data/panchayat/'+id;},
+        deleteApi:function(id){return '/admin/data/panchayat/'+id;} },
+      wards:      { label:'Ward',            api:'/admin/data/wards', addApi:'/admin/data/add-local-body',
+        fields:[{id:'name',label:'Name *',req:true},{id:'type',label:'Type',type:'hidden',value:'ward'},
+                {id:'wardNumber',label:'Ward Number',type:'number'},{id:'panchayatId',label:'Panchayat',type:'panchayat-select',req:true}],
+        cols:['name','ward_number'],
+        editApi:function(id){return '/admin/data/ward/'+id;},
+        deleteApi:function(id){return '/admin/data/ward/'+id;} }
+    };
+
+    var locRawData = [];
+
+    function switchLocTab(tab) {
+      currentLocTab = tab;
+      Object.keys(locConfig).forEach(function(k){
+        var b = document.getElementById('locTab-'+k);
+        if (b) b.className = k===tab?'bsm ben':'bsm bre';
+      });
+      var distFilter = document.getElementById('locDistrictFilter');
+      distFilter.style.display = (tab==='vs'||tab==='ls')?'block':'none';
+      document.getElementById('locAddForm').style.display='none';
+      loadLocData();
+    }
+
+    function loadLocationsPanel() {
+      // Populate state filter dropdown
+      fetch('/admin/data/states').then(function(r){return r.json();}).then(function(states){
+        var sel=document.getElementById('locStateFilter');
+        sel.innerHTML='<option value="">All States</option>';
+        states.forEach(function(s){ var o=document.createElement('option');o.value=s.id;o.textContent=s.name;sel.appendChild(o); });
+      });
+      switchLocTab('states');
+    }
+
+    function loadLocData() {
+      var stateId = document.getElementById('locStateFilter').value;
+      var cfg = locConfig[currentLocTab];
+      var url;
+      if (currentLocTab==='ls') url='/admin/data/constituencies?type=LS'+(stateId?'&stateId='+stateId:'&stateId=23');
+      else if (currentLocTab==='vs') url='/admin/data/constituencies?type=VS'+(stateId?'&stateId='+stateId:'&stateId=23');
+      else if (currentLocTab==='districts') url='/admin/data/districts'+(stateId?'?stateId='+stateId:'');
+      else url=cfg.api;
+      if (!url) { document.getElementById('locTableContainer').innerHTML='<div style="padding:24px;color:var(--muted);">Select a state filter first.</div>'; return; }
+      fetch(url).then(function(r){return r.json();}).then(function(data){
+        locRawData = data;
+        renderLocTable(data);
+      }).catch(function(e){
+        document.getElementById('locTableContainer').innerHTML='<div style="padding:16px;color:var(--red);">Error: '+e.message+'</div>';
+      });
+    }
+
+    function filterLocTable(q) {
+      if (!q) { renderLocTable(locRawData); return; }
+      var filtered = locRawData.filter(function(row){
+        return Object.values(row).some(function(v){ return v&&String(v).toLowerCase().indexOf(q.toLowerCase())>=0; });
+      });
+      renderLocTable(filtered);
+    }
+
+    function renderLocTable(data) {
+      var cfg = locConfig[currentLocTab];
+      var container = document.getElementById('locTableContainer');
+      if (!data||!data.length){ container.innerHTML='<div style="padding:24px;text-align:center;color:var(--muted);">No data found.</div>'; return; }
+      var html='<table class="rtable"><thead><tr><th>ID</th>';
+      cfg.cols.forEach(function(c){ html+='<th>'+c.replace(/_/g,' ').replace(/\w/g,function(l){return l.toUpperCase()})+'</th>'; });
+      html+='<th>Actions</th></tr></thead><tbody>';
+      data.forEach(function(row,i){
+        html+='<tr><td style="color:var(--muted);font-size:11px;">'+(row.id||'-')+'</td>';
+        cfg.cols.forEach(function(c){ html+='<td>'+(row[c]||'-')+'</td>'; });
+        html+='<td><button class="bsm bre" style="font-size:11px;margin-right:4px;" id="loc-edit-'+i+'" data-idx="'+i+'">Edit</button>';
+        html+='<button class="bsm brs" style="font-size:11px;" id="loc-del-'+i+'" data-idx="'+i+'">Delete</button></td></tr>';
+      });
+      html+='</tbody></table>';
+      container.innerHTML=html;
+      data.forEach(function(row,i){
+        var editBtn=document.getElementById('loc-edit-'+i);
+        var delBtn=document.getElementById('loc-del-'+i);
+        if(editBtn) editBtn.addEventListener('click',function(){ showEditLocForm(row, i); });
+        if(delBtn) delBtn.addEventListener('click',function(){ deleteLocItem(row); });
+      });
+    }
+
+    function showAddLocForm() {
+      locFormMode='add'; locEditId=null;
+      document.getElementById('locFormTitle').textContent='Add New '+locConfig[currentLocTab].label;
+      buildLocFormFields({});
+      document.getElementById('locAddForm').style.display='block';
+      document.getElementById('locAddForm').scrollIntoView({behavior:'smooth'});
+    }
+
+    function showEditLocForm(row, idx) {
+      locFormMode='edit'; locEditId=row.id;
+      document.getElementById('locFormTitle').textContent='Edit '+locConfig[currentLocTab].label+' #'+row.id;
+      buildLocFormFields(row);
+      document.getElementById('locAddForm').style.display='block';
+      document.getElementById('locAddForm').scrollIntoView({behavior:'smooth'});
+    }
+
+    function buildLocFormFields(values) {
+      var cfg=locConfig[currentLocTab];
+      var container=document.getElementById('locFormFields');
+      container.innerHTML='';
+      cfg.fields.forEach(function(f){
+        if(f.type==='hidden'){ var inp=document.createElement('input');inp.type='hidden';inp.id='lf_'+f.id;inp.value=f.value||'';container.appendChild(inp);return; }
+        var wrapper=document.createElement('div');
+        var lbl=document.createElement('label'); lbl.style.cssText='font-size:13px;font-weight:600;display:block;margin-bottom:4px;';
+        lbl.textContent=f.label; wrapper.appendChild(lbl);
+        var inp;
+        if(f.type==='select'){
+          inp=document.createElement('select'); inp.id='lf_'+f.id;
+          f.opts.forEach(function(o){ var op=document.createElement('option');op.value=o;op.textContent=o;inp.appendChild(op); });
+          inp.value=values[f.id.replace(/[A-Z]/g,function(c){return '_'+c.toLowerCase()})]||'';
+        } else if(f.type==='state-select'){
+          inp=document.createElement('select'); inp.id='lf_'+f.id;
+          inp.innerHTML='<option value="">Select state...</option>';
+          fetch('/admin/data/states').then(function(r){return r.json();}).then(function(states){
+            states.forEach(function(s){var o=document.createElement('option');o.value=s.id;o.textContent=s.name;inp.appendChild(o);});
+            if(values.state_id) inp.value=values.state_id;
+          });
+        } else if(f.type==='council-select'){
+          inp=document.createElement('select'); inp.id='lf_'+f.id;
+          inp.innerHTML='<option value="">Select council...</option>';
+          fetch('/admin/data/councils').then(function(r){return r.json();}).then(function(cs){
+            cs.forEach(function(c){var o=document.createElement('option');o.value=c.id;o.textContent=c.name;inp.appendChild(o);});
+          });
+        } else if(f.type==='panchayat-select'){
+          inp=document.createElement('select'); inp.id='lf_'+f.id;
+          inp.innerHTML='<option value="">Select panchayat...</option>';
+          fetch('/admin/data/panchayats').then(function(r){return r.json();}).then(function(ps){
+            ps.forEach(function(p){var o=document.createElement('option');o.value=p.id;o.textContent=p.name;inp.appendChild(o);});
+          });
+        } else {
+          inp=document.createElement('input'); inp.id='lf_'+f.id;
+          inp.type=f.type==='number'?'number':'text';
+          inp.placeholder=f.label;
+          // Try to populate from data
+          var key=f.id.replace(/[A-Z]/g,function(c){return '_'+c.toLowerCase()});
+          inp.value=values[f.id]||values[key]||'';
+        }
+        inp.style.cssText='width:100%;padding:9px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;';
+        wrapper.appendChild(inp);
+        container.appendChild(wrapper);
+        // Add empty div for odd fields
+        if(cfg.fields.indexOf(f)===cfg.fields.length-1&&cfg.fields.length%2!==0){
+          container.appendChild(document.createElement('div'));
+        }
+      });
+    }
+
+    function getLocFormData() {
+      var cfg=locConfig[currentLocTab];
+      var data={};
+      cfg.fields.forEach(function(f){
+        var el=document.getElementById('lf_'+f.id);
+        if(el) data[f.id]=el.value||null;
+      });
+      // Add type for VS
+      if(currentLocTab==='vs') data.type='VS';
+      if(currentLocTab==='ls') data.type='LS';
+      return data;
+    }
+
+    function submitLocForm() {
+      var cfg=locConfig[currentLocTab];
+      var data=getLocFormData();
+      var url,method;
+      if(locFormMode==='edit'&&locEditId){
+        url=cfg.editApi(locEditId); method='PUT';
+      } else {
+        url=cfg.addApi; method='POST';
+      }
+      fetch(url,{method:method,headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
+        .then(function(r){return r.json();}).then(function(d){
+          if(d.success){
+            showAlert('locFormSuc',d.message);
+            document.getElementById('locAddForm').style.display='none';
+            loadLocData();
+          } else showAlert('locFormErr',d.message||'Error');
+        }).catch(function(e){ showAlert('locFormErr','Error: '+e.message); });
+    }
+
+    function deleteLocItem(row) {
+      var cfg=locConfig[currentLocTab];
+      if(!confirm('Delete '+cfg.label+' "'+( row.name||row.id)+'"? This may affect related data.')) return;
+      fetch(cfg.deleteApi(row.id),{method:'DELETE'})
+        .then(function(r){return r.json();}).then(function(d){
+          if(d.success){ showAlert('locSuc',d.message); loadLocData(); }
+          else showAlert('locErr',d.message);
+        }).catch(function(e){ showAlert('locErr',e.message); });
+    }
+
+    function showAlert(id, msg) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.add('show');
+      setTimeout(function() { el.classList.remove('show'); }, 5000);
+    }
+
+    // Boot
+    init();
+</script>
+</body>
+</html>

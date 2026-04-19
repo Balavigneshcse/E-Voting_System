@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login — E-Voting</title>
+    <style>
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+        :root{--blue:#1a3c6e;--blue-lt:#2457a0;--red:#e74c3c;--green:#27ae60;--gray:#f4f6f9;--text:#1c1c1e;--muted:#6b7280;--border:#d1d5db;--white:#ffffff;}
+        body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--gray);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
+
+        .header{text-align:center;margin-bottom:28px;}
+        .emblem{width:68px;height:68px;background:var(--blue);border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;}
+        .emblem svg{width:36px;height:36px;}
+        .header h1{font-size:22px;font-weight:700;color:var(--blue);}
+        .header p{font-size:13px;color:var(--muted);margin-top:3px;}
+
+        .card{background:var(--white);border-radius:12px;padding:36px;width:100%;max-width:400px;border:1px solid var(--border);}
+        .card h2{font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;}
+        .card .sub{font-size:13px;color:var(--muted);margin-bottom:24px;}
+
+        .field{margin-bottom:16px;}
+        .field label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;}
+        .field input{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;color:var(--text);transition:border-color .2s;}
+        .field input:focus{outline:none;border-color:var(--blue);}
+
+        .btn{width:100%;padding:13px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:6px;transition:background .2s;}
+        .btn:hover{background:var(--blue-lt);}
+
+        .alert{padding:11px 13px;border-radius:8px;font-size:13px;margin-bottom:18px;}
+        .alert.error  {background:#fef2f2;color:var(--red);  border:1px solid #fecaca;}
+        .alert.success{background:#f0fdf4;color:var(--green);border:1px solid #bbf7d0;}
+
+        .back{margin-top:16px;text-align:center;font-size:13px;color:var(--muted);}
+        .back a{color:var(--blue);text-decoration:none;}
+
+        .lock-icon{text-align:center;margin-bottom:20px;}
+
+        /* Hide the default browser password reveal button */
+        input[type=password]::-ms-reveal{display:none;}
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="emblem">
+        <svg viewBox="0 0 40 40" fill="none">
+            <path d="M20 4L6 10v10c0 8.84 5.93 17.12 14 19.93C28.07 37.12 34 28.84 34 20V10L20 4z" fill="white" opacity="0.9"/>
+            <path d="M15 20l4 4 8-8" stroke="#1a3c6e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </div>
+    <h1>Secure E-Voting System</h1>
+    <p>State Election Commission — Administration</p>
+</div>
+
+<div class="card">
+
+    <div class="lock-icon">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <rect x="8" y="18" width="24" height="18" rx="4" fill="#e6f1fb" stroke="#1a3c6e" stroke-width="1.5"/>
+            <path d="M13 18v-5a7 7 0 0114 0v5" stroke="#1a3c6e" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+            <circle cx="20" cy="27" r="2.5" fill="#1a3c6e"/>
+            <line x1="20" y1="29.5" x2="20" y2="33" stroke="#1a3c6e" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+    </div>
+
+    <h2>Admin Login</h2>
+    <p class="sub">Restricted access. Authorised personnel only.</p>
+
+    <!-- Error / success messages from Spring Security redirect -->
+    <div id="errorAlert"   style="display:none" class="alert error">Incorrect username or password.</div>
+    <div id="logoutAlert"  style="display:none" class="alert success">You have been logged out successfully.</div>
+
+    <!-- Spring Security processes POST /perform-login -->
+    <form action="/perform-login" method="POST">
+
+        <div class="field">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" placeholder="admin" autocomplete="off" required>
+        </div>
+
+        <div class="field">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="Enter password" required>
+        </div>
+
+        <button type="submit" class="btn">Login to Admin Panel</button>
+    </form>
+</div>
+
+<div class="back"><a href="/index.html">&#8592; Back to voting portal</a></div>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('error'))  document.getElementById('errorAlert').style.display  = 'block';
+    if (params.get('logout')) document.getElementById('logoutAlert').style.display = 'block';
+</script>
+</body>
+</html>

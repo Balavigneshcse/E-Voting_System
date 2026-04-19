@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biometric Verification — E-Voting</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+          --blue:#1a3c6e; --blue-lt:#2457a0; --orange:#e67e22;
+          --green:#27ae60; --red:#e74c3c; --gray:#f4f6f9;
+          --text:#1c1c1e; --muted:#6b7280; --border:#d1d5db;
+          --white:#ffffff; --radius:12px;
+        }
+        body {
+          font-family:'Segoe UI',system-ui,sans-serif;
+          background:var(--gray); min-height:100vh;
+          display:flex; flex-direction:column;
+          align-items:center; justify-content:center; padding:24px;
+        }
+        .header { text-align:center; margin-bottom:28px; }
+        .header h1 { font-size:22px; font-weight:700; color:var(--blue); }
+        .header p  { font-size:13px; color:var(--muted); margin-top:3px; }
+
+        .steps {
+          display:flex; gap:0; margin-bottom:28px;
+          background:var(--white); border-radius:40px;
+          padding:6px; border:1px solid var(--border);
+        }
+        .step { padding:8px 20px; border-radius:30px; font-size:13px; font-weight:500; color:var(--muted); display:flex; align-items:center; gap:8px; }
+        .step.done   { color:var(--green); }
+        .step.active { background:var(--blue); color:var(--white); }
+        .step .num   { width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700; }
+        .step:not(.active) .num { background:var(--border); color:var(--text); }
+        .step.done .num { background:var(--green); color:var(--white); }
+
+        .card { background:var(--white); border-radius:var(--radius); padding:40px; width:100%; max-width:480px; border:1px solid var(--border); text-align:center; }
+        .card h2  { font-size:20px; font-weight:700; color:var(--text); margin-bottom:6px; }
+        .card .sub { font-size:14px; color:var(--muted); margin-bottom:32px; }
+
+        .voter-badge {
+          background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px;
+          padding:12px 16px; margin-bottom:28px; text-align:left;
+          display:flex; align-items:center; gap:12px;
+        }
+        .voter-badge .avatar {
+          width:44px; height:44px; border-radius:50%; background:var(--blue);
+          display:flex; align-items:center; justify-content:center;
+          color:var(--white); font-size:18px; font-weight:700; flex-shrink:0;
+        }
+        .voter-badge .name { font-size:15px; font-weight:600; color:var(--blue); }
+        .voter-badge .label { font-size:12px; color:var(--muted); }
+
+        .fp-container { margin: 0 auto 28px; position:relative; display:inline-block; }
+        .fp-ring {
+          width:140px; height:140px; border-radius:50%;
+          border:3px solid var(--border);
+          display:flex; align-items:center; justify-content:center;
+          position:relative; transition:border-color .3s;
+        }
+        .fp-ring.scanning { border-color:var(--blue); animation:scan-pulse 1.2s ease-in-out infinite; }
+        .fp-ring.success  { border-color:var(--green); }
+        .fp-ring.failed   { border-color:var(--red); }
+        @keyframes scan-pulse {
+          0%,100% { box-shadow:0 0 0 0 rgba(26,60,110,.25); }
+          50% { box-shadow:0 0 0 14px rgba(26,60,110,.04); }
+        }
+        .fp-icon { transition:all .3s; }
+        .scan-bar {
+          position:absolute; top:10%; left:10%; width:80%; height:3px;
+          background:linear-gradient(90deg,transparent,var(--blue),transparent);
+          animation:scan-move 1.2s ease-in-out infinite;
+          display:none; border-radius:2px;
+        }
+        .fp-ring.scanning .scan-bar { display:block; }
+        @keyframes scan-move {
+          0%   { top:10%; opacity:0; }
+          10%  { opacity:1; }
+          90%  { opacity:1; }
+          100% { top:85%; opacity:0; }
+        }
+        .fp-status { font-size:14px; color:var(--muted); margin-top:12px; min-height:20px; }
+
+        .btn {
+          display:inline-block; padding:14px 36px;
+          background:var(--blue); color:var(--white);
+          border:none; border-radius:8px;
+          font-size:16px; font-weight:600;
+          cursor:pointer; transition:background .2s;
+        }
+        .btn:hover { background:var(--blue-lt); }
+        .btn:disabled { background:var(--border); cursor:not-allowed; }
+        .btn.success-btn { background:var(--green); }
+
+        .alert { padding:12px 14px; border-radius:8px; font-size:14px; margin-top:16px; display:none; }
+        .alert.error   { background:#fef2f2; color:var(--red);   border:1px solid #fecaca; }
+        .alert.success { background:#f0fdf4; color:var(--green); border:1px solid #bbf7d0; }
+        .alert.show    { display:block; }
+
+        .back-link { margin-top:16px; font-size:13px; color:var(--muted); cursor:pointer; text-decoration:underline; }
+        .timer-bar{background:#fef9ec;border:1px solid #fed7aa;border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
+        .timer-bar .label{font-size:13px;color:var(--muted);}
+        .timer-bar .time{font-size:15px;font-weight:700;color:var(--orange);}
+        .timer-bar .time.urgent{color:var(--red);}
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Secure E-Voting System</h1>
+    <p>State Election Commission — Blockchain Secured</p>
+</div>
+
+<div class="steps">
+    <div class="step done">  <span class="num">&#10003;</span> Identity</div>
+    <div class="step active"><span class="num">2</span> Biometric</div>
+    <div class="step">       <span class="num">3</span> Vote</div>
+</div>
+
+<div class="card">
+    <h2>Biometric Verification</h2>
+    <p class="sub">Place your finger on the biometric scanner to confirm your identity.</p>
+
+    <div class="timer-bar">
+        <span class="label">Session expires in</span>
+        <span class="time" id="bioTimerDisplay">5:00</span>
+    </div>
+
+    <div class="voter-badge" id="voterBadge">
+        <div class="avatar" id="voterInitial">?</div>
+        <div>
+            <div class="name" id="voterName">Loading…</div>
+            <div class="label">Verified voter identity</div>
+        </div>
+    </div>
+
+    <div class="fp-container">
+        <div class="fp-ring" id="fpRing">
+            <div class="scan-bar"></div>
+            <div class="fp-icon" id="fpIcon">
+                <svg width="72" height="72" viewBox="0 0 72 72" fill="none" id="fpSvg">
+                    <path d="M36 8C24.95 8 16 16.95 16 28v16c0 11.05 8.95 20 20 20s20-8.95 20-20V28C56 16.95 47.05 8 36 8z" stroke="#9ca3af" stroke-width="2" fill="none"/>
+                    <path d="M28 28c0-4.42 3.58-8 8-8s8 3.58 8 8" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" fill="none"/>
+                    <path d="M24 36c0-6.63 5.37-12 12-12s12 5.37 12 12v4" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" fill="none"/>
+                    <path d="M36 28v16" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M30 32v12" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M42 32v12" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="36" cy="28" r="2" fill="#9ca3af"/>
+                </svg>
+            </div>
+        </div>
+        <div class="fp-status" id="fpStatus">Ready to scan</div>
+    </div>
+
+    <button class="btn" id="scanBtn" onclick="startScan()">Scan Fingerprint</button>
+    <div class="alert error"   id="errorMsg"></div>
+    <div class="alert success" id="successMsg"></div>
+    <p class="back-link" onclick="window.location.href='/index.html'">&#8592; Back to identity page</p>
+</div>
+
+<script>
+    let bioSeconds = 300;
+    const bioInterval = setInterval(() => {
+      bioSeconds--;
+      const m = Math.floor(bioSeconds / 60);
+      const s = bioSeconds % 60;
+      const el = document.getElementById('bioTimerDisplay');
+      el.textContent = m + ':' + String(s).padStart(2,'0');
+      if (bioSeconds <= 60) el.classList.add('urgent');
+      if (bioSeconds <= 0) {
+        clearInterval(bioInterval);
+        alert('Session expired. Please restart.');
+        sessionStorage.clear();
+        window.location.href = '/index.html';
+      }
+    }, 1000);
+
+    const token = sessionStorage.getItem('sessionToken');
+    const name  = sessionStorage.getItem('voterName') || 'Voter';
+
+    if (!token) { window.location.href = '/index.html'; }
+
+    document.getElementById('voterName').textContent    = name;
+    document.getElementById('voterInitial').textContent = name.charAt(0).toUpperCase();
+
+    let scanning = false;
+
+    async function startScan() {
+      if (scanning) return;
+      scanning = true;
+
+      const btn    = document.getElementById('scanBtn');
+      const ring   = document.getElementById('fpRing');
+      const status = document.getElementById('fpStatus');
+      const fpSvg  = document.getElementById('fpSvg');
+
+      btn.disabled = true; btn.textContent = 'Scanning…';
+      ring.classList.add('scanning');
+      status.textContent = 'Scanning… keep finger still';
+      clearMessages();
+
+      // Change SVG lines to blue during scan
+      fpSvg.querySelectorAll('path,circle').forEach(el => {
+        el.setAttribute('stroke', '#1a3c6e');
+        if (el.tagName === 'circle') el.setAttribute('fill','#1a3c6e');
+      });
+
+      // Simulate 2s hardware scan delay, then call backend
+      await delay(2000);
+
+      try {
+        const res = await fetch('/nfc/biometric', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionToken: token })
+        });
+        const data = await res.json();
+
+        ring.classList.remove('scanning');
+
+        if (data.success) {
+          ring.classList.add('success');
+          status.textContent = 'Biometric verified!';
+          fpSvg.querySelectorAll('path,circle').forEach(el => {
+            el.setAttribute('stroke','#27ae60');
+            if (el.tagName === 'circle') el.setAttribute('fill','#27ae60');
+          });
+          sessionStorage.setItem('constituencyId', data.constituencyId);
+          sessionStorage.setItem('electionName',    data.electionName || 'Election');
+          sessionStorage.setItem('electionType',    data.electionType || 'CM');
+          showSuccess('Verified! Loading your ballot…');
+          setTimeout(() => window.location.href = '/vote.html', 1400);
+        } else {
+          ring.classList.add('failed');
+          status.textContent = 'Scan failed';
+          fpSvg.querySelectorAll('path,circle').forEach(el => {
+            el.setAttribute('stroke','#e74c3c');
+            if (el.tagName === 'circle') el.setAttribute('fill','#e74c3c');
+          });
+          showError(data.message || 'Biometric verification failed. Please try again.');
+          btn.disabled = false; btn.textContent = 'Try Again';
+          scanning = false;
+          setTimeout(() => {
+            ring.classList.remove('failed');
+            fpSvg.querySelectorAll('path,circle').forEach(el => {
+              el.setAttribute('stroke','#9ca3af');
+              if (el.tagName === 'circle') el.setAttribute('fill','#9ca3af');
+            });
+            status.textContent = 'Ready to scan';
+          }, 3000);
+        }
+      } catch (e) {
+        ring.classList.remove('scanning');
+        showError('Server error. Please try again.');
+        btn.disabled = false; btn.textContent = 'Scan Fingerprint';
+        scanning = false;
+      }
+    }
+
+    function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+    function showError(msg)   { const el=document.getElementById('errorMsg');   el.textContent=msg; el.classList.add('show'); }
+    function showSuccess(msg) { const el=document.getElementById('successMsg'); el.textContent=msg; el.classList.add('show'); }
+    function clearMessages()  { ['errorMsg','successMsg'].forEach(id=>document.getElementById(id).classList.remove('show')); }
+</script>
+</body>
+</html>
