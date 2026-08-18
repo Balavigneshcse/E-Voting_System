@@ -4,5 +4,8 @@ target/ linguist-generated=true
 evoting-data/ linguist-vendored=true
 .data/ linguist-vendored=true
 
-# SQL migrations are config/data, not primary language
+# SQL migrations are schema/data files — exclude from language detection
+*.sql linguist-vendored=true
 *.sql linguist-detectable=false
+E-voting_Server/src/main/resources/db/ linguist-vendored=true
+E-voting_Server/src/main/resources/db/ linguist-generated=true
