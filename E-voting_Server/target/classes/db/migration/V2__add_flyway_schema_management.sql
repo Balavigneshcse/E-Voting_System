@@ -1,3 +1,0 @@
--- Flyway adoption marker.
--- V1 contains the complete initial VotingDB schema and seed data.
--- Put future, transactional schema changes in new files named V3__, V4__, etc.

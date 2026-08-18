@@ -1,0 +1,30 @@
+# Maven build output
+target/
+*.class
+*.jar
+*.war
+
+# IDE files
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment / secrets
+*.env
+.env.*
+
+# Data files (local only)
+evoting-data/
+.data/
+
+# Excel exports
+*.xlsx
