@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Election Administration — E-Voting</title>
+  <style>
+    /* Indian flag palette, matching the voting terminal's Theme.java. */
+    :root {
+      --saffron: #FF9933;
+      --saffron-dark: #9C4600;
+      --green: #0F7A1E;
+      --green-dark: #0A571A;
+      --navy: #0B1F4B;
+      --navy-deep: #06122A;
+      --canvas: #F3F1EA;
+      --surface: #FFFFFF;
+      --ink: #17181D;
+      --ink-muted: #5B5F6B;
+      --hairline: #E3DFD2;
+      --alert: #B31C1C;
+      --shadow: 0 1px 2px rgba(11,31,75,.06), 0 8px 24px -8px rgba(11,31,75,.16);
+      --shadow-sm: 0 1px 2px rgba(11,31,75,.08);
+      --radius: 14px;
+      --radius-sm: 10px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Nirmala UI", "Segoe UI", "Noto Sans", system-ui, sans-serif;
+      background: var(--canvas);
+      background-image: radial-gradient(circle at 100% 0%, rgba(11,31,75,.035), transparent 55%);
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.5;
+    }
+    .tricolour { height: 5px; background: linear-gradient(to right,
+      var(--saffron) 0 33.33%, #fff 33.33% 66.66%, var(--green) 66.66% 100%); }
+
+    header {
+      background: linear-gradient(180deg, var(--navy) 0%, var(--navy-deep) 100%);
+      padding: 18px 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+      color: #fff;
+    }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .brand .chakra { width: 38px; height: 38px; flex: none; }
+    header h1 {
+      margin: 0; font-size: 17px; font-weight: 700; color: #fff;
+      letter-spacing: 1.5px;
+    }
+    header p { margin: 2px 0 0; font-size: 12.5px; color: #B9C3E0; }
+    .who { font-size: 13px; color: #C7D0E8; text-align: right; }
+    .who strong { color: #fff; }
+    .who a {
+      display: inline-block; margin-top: 6px; color: #fff; text-decoration: none;
+      font-size: 12.5px; font-weight: 600; padding: 5px 12px; border-radius: 99px;
+      border: 1px solid rgba(255,255,255,.35); transition: background .15s;
+    }
+    .who a:hover { background: rgba(255,255,255,.12); }
+
+    nav {
+      background: var(--surface); border-bottom: 1px solid var(--hairline);
+      padding: 10px 24px; display: flex; gap: 6px; overflow-x: auto;
+      box-shadow: var(--shadow-sm);
+    }
+    nav button {
+      background: none; border: none; border-radius: 99px;
+      padding: 9px 18px; font: inherit; font-weight: 600; font-size: 13.5px;
+      color: var(--ink-muted); cursor: pointer; white-space: nowrap;
+      transition: background .15s, color .15s;
+    }
+    nav button:hover { background: var(--canvas); color: var(--ink); }
+    nav button[aria-selected="true"] {
+      color: #fff; background: var(--navy);
+    }
+    nav button:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
+
+    main { padding: 26px 28px 60px; max-width: 1240px; }
+    section[hidden] { display: none; }
+    h2 { font-size: 19px; margin: 0 0 14px; color: var(--navy); font-weight: 700; }
+    h3 { font-size: 14.5px; margin: 22px 0 10px; color: var(--ink); font-weight: 700;
+         text-transform: uppercase; letter-spacing: .5px; }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--hairline);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 22px 24px; margin-bottom: 18px;
+    }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+
+    .stat {
+      background: var(--surface); border: 1px solid var(--hairline);
+      border-radius: var(--radius-sm); box-shadow: var(--shadow-sm);
+      padding: 18px 20px; position: relative; overflow: hidden;
+    }
+    .stat::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(to right, var(--saffron), var(--green));
+    }
+    .stat .value { font-size: 30px; font-weight: 700; color: var(--navy); }
+    .stat .label { font-size: 11.5px; text-transform: uppercase; letter-spacing: .8px;
+                   color: var(--ink-muted); font-weight: 600; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--hairline); }
+    th { font-size: 11.5px; text-transform: uppercase; letter-spacing: .6px; color: var(--ink-muted);
+         font-weight: 700; }
+    tbody tr { transition: background .1s; }
+    tbody tr:hover { background: var(--canvas); }
+    tbody tr:last-child td { border-bottom: none; }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+    label { display: block; font-size: 12.5px; font-weight: 700; margin: 12px 0 5px;
+            color: var(--ink-muted); text-transform: uppercase; letter-spacing: .4px; }
+    input, select {
+      width: 100%; padding: 10px 12px; font: inherit; font-size: 14.5px;
+      border: 1.5px solid var(--hairline); border-radius: var(--radius-sm);
+      background: #fff; color: var(--ink); transition: border-color .15s;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--navy); }
+    .row { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+
+    button.action {
+      font: inherit; font-weight: 700; font-size: 14px; color: #fff;
+      background: linear-gradient(180deg, var(--navy) 0%, #081733 100%);
+      border: none; border-radius: 99px; padding: 11px 22px; cursor: pointer;
+      margin: 14px 8px 0 0; box-shadow: 0 1px 2px rgba(11,31,75,.25);
+      transition: filter .15s, transform .1s;
+    }
+    button.action.go { background: linear-gradient(180deg, var(--green) 0%, #084012 100%); }
+    button.action.warn { background: linear-gradient(180deg, var(--saffron-dark) 0%, #9e4d00 100%); }
+    button.action.danger { background: linear-gradient(180deg, var(--alert) 0%, #7a1212 100%); }
+    button.action.ghost { background: #fff; color: var(--ink); border: 1.5px solid var(--hairline);
+                           box-shadow: none; }
+    button.action:hover { filter: brightness(1.12); }
+    button.action:active { transform: translateY(1px); }
+    button.action.ghost:hover { background: var(--canvas); filter: none; }
+    button.action:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
+    button.tiny { font-size: 12.5px; padding: 7px 14px; margin: 0 6px 0 0; }
+
+    .pill { display: inline-block; padding: 4px 12px; border-radius: 99px;
+            font-size: 11.5px; font-weight: 700; letter-spacing: .3px; text-transform: uppercase; }
+    .pill.ok { background: #E4F4E2; color: var(--green-dark); }
+    .pill.warn { background: #FDEEDC; color: var(--saffron-dark); }
+    .pill.bad { background: #FBE4E4; color: var(--alert); }
+
+    .notice {
+      padding: 13px 16px; margin: 14px 0; border-radius: var(--radius-sm);
+      border-left: 4px solid var(--navy); background: #EEF0FA; font-size: 14px;
+    }
+    .notice.ok { border-color: var(--green); background: #EAF6E9; }
+    .notice.bad { border-color: var(--alert); background: #FBEAEA; }
+    .notice.secret { border-color: var(--saffron-dark); background: #FFF3E2; }
+    .notice code { font-family: ui-monospace, Consolas, monospace; font-size: 15px;
+                   font-weight: 700; user-select: all; }
+    .id-callout { display: inline-block; margin-top: 10px; padding: 10px 16px;
+                  background: #fff; border: 1.5px dashed var(--navy); border-radius: var(--radius-sm); }
+    .id-callout .id-callout-label { font-size: 11px; text-transform: uppercase; letter-spacing: .6px;
+                                     color: var(--ink-muted); display: block; }
+    .id-callout .id-callout-value { font-family: ui-monospace, Consolas, monospace; font-size: 24px;
+                                     font-weight: 800; color: var(--navy); letter-spacing: 1px;
+                                     user-select: all; }
+
+    .bar { height: 20px; background: #EDEBE3; border-radius: 99px; position: relative;
+           overflow: hidden; }
+    .bar span { display: block; height: 100%;
+                background: linear-gradient(to right, var(--saffron), var(--green)); }
+    .muted { color: var(--ink-muted); font-size: 13px; }
+    .toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+    .toggle input { width: auto; }
+    a { color: var(--navy); }
+
+    /* ── Charts ──────────────────────────────────────────────────────── */
+    .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px;
+              vertical-align: middle; margin-right: 8px; }
+
+    .hbar-chart { display: flex; flex-direction: column; gap: 10px; }
+    .hbar-row { display: grid; grid-template-columns: 150px 1fr 78px; align-items: center; gap: 10px; }
+    .hbar-name { overflow: hidden; }
+    .hbar-name-title { font-size: 13px; color: var(--ink); overflow: hidden; text-overflow: ellipsis;
+                        white-space: nowrap; }
+    .hbar-name-sub { font-size: 11px; color: var(--ink-muted); overflow: hidden; text-overflow: ellipsis;
+                      white-space: nowrap; }
+    .hbar-track { height: 16px; background: #EDEBE3; border-radius: 99px; overflow: hidden; }
+    .hbar-fill { display: block; height: 100%; border-radius: 99px; min-width: 3px;
+                 background: linear-gradient(to right, var(--saffron), var(--green));
+                 transition: width .3s; }
+    .hbar-value { font-size: 13px; font-variant-numeric: tabular-nums; font-weight: 700;
+                  color: var(--navy); text-align: right; }
+    .hbar-row.hbar-flagged .hbar-name-title { color: var(--alert); font-weight: 700; }
+    .hbar-row.hbar-flagged .hbar-fill { background: linear-gradient(to right, #E3A23C, var(--alert)); }
+  </style>
+</head>
+<body>
+<div class="tricolour"></div>
+<header>
+  <div class="brand">
+    <svg class="chakra" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <circle cx="50" cy="50" r="44" stroke="#fff" stroke-width="4"/>
+      <circle cx="50" cy="50" r="6" fill="#fff"/>
+      <g stroke="#fff" stroke-width="3" stroke-linecap="round">
+        <line x1="50" y1="9" x2="50" y2="24"/>
+        <line x1="50" y1="76" x2="50" y2="91"/>
+        <line x1="9" y1="50" x2="24" y2="50"/>
+        <line x1="76" y1="50" x2="91" y2="50"/>
+        <line x1="19.6" y1="19.6" x2="29.9" y2="29.9"/>
+        <line x1="70.1" y1="70.1" x2="80.4" y2="80.4"/>
+        <line x1="80.4" y1="19.6" x2="70.1" y2="29.9"/>
+        <line x1="29.9" y1="70.1" x2="19.6" y2="80.4"/>
+        <line x1="33.6" y1="12.4" x2="38.9" y2="26.4"/>
+        <line x1="61.1" y1="73.6" x2="66.4" y2="87.6"/>
+        <line x1="12.4" y1="66.4" x2="26.4" y2="61.1"/>
+        <line x1="73.6" y1="38.9" x2="87.6" y2="33.6"/>
+        <line x1="12.4" y1="33.6" x2="26.4" y2="38.9"/>
+        <line x1="73.6" y1="61.1" x2="87.6" y2="66.4"/>
+        <line x1="33.6" y1="87.6" x2="38.9" y2="73.6"/>
+        <line x1="61.1" y1="26.4" x2="66.4" y2="12.4"/>
+        <line x1="19.6" y1="80.4" x2="24.7" y2="75.3"/>
+        <line x1="75.3" y1="24.7" x2="80.4" y2="19.6"/>
+        <line x1="24.7" y1="24.7" x2="19.6" y2="19.6"/>
+        <line x1="80.4" y1="80.4" x2="75.3" y2="75.3"/>
+      </g>
+    </svg>
+    <div>
+      <h1>ELECTION ADMINISTRATION</h1>
+      <p>Election Commission — Secure Polling Server</p>
+    </div>
+  </div>
+  <div class="who">
+    <div>Signed in as <strong id="whoName">…</strong></div>
+    <div id="whoRoles" class="muted"></div>
+    <a href="/perform-logout">Sign out</a>
+  </div>
+</header>
+
+<nav role="tablist" aria-label="Administration sections">
+  <button role="tab" aria-selected="true"  data-panel="pmresults">PM election results</button>
+  <button role="tab" aria-selected="false" data-panel="cmresults">CM election results</button>
+  <button role="tab" aria-selected="false" data-panel="polling">Polling control</button>
+  <button role="tab" aria-selected="false" data-panel="terminals">Terminals</button>
+  <button role="tab" aria-selected="false" data-panel="ledger">Ledger audit</button>
+  <button role="tab" aria-selected="false" data-panel="voters">Voters</button>
+  <button role="tab" aria-selected="false" data-panel="candidates">Candidates</button>
+</nav>
+
+<main>
+  <!-- ── PM election results ──────────────────────────────────────── -->
+  <section id="panel-pmresults">
+    <h2>PM election results</h2>
+    <p class="muted">
+      Tallies are computed from the ballot table on every request, so what you see is current
+      to the second. Ballots carry no voter identity, so counting cannot reveal how anyone voted.
+    </p>
+    <div class="card">
+      <div class="row">
+        <div>
+          <label for="pmResultsElection">Election</label>
+          <select id="pmResultsElection"></select>
+        </div>
+        <div>
+          <label for="pmAutoRefresh">Refresh</label>
+          <div class="toggle">
+            <input type="checkbox" id="pmAutoRefresh" checked>
+            <label for="pmAutoRefresh" style="margin:0;font-weight:400">
+              Auto-refresh every 5 seconds
+            </label>
+          </div>
+        </div>
+      </div>
+      <button class="action" id="pmRefreshResults">Refresh now</button>
+      <a class="action ghost" id="pmExportResults" style="display:inline-block;text-decoration:none;">
+        Download as Excel
+      </a>
+      <span class="muted" id="pmResultsUpdated"></span>
+      <div id="pmResultsHeader" style="margin-top:14px;"></div>
+    </div>
+
+    <div class="grid" id="pmResultsStats"></div>
+
+    <div class="card">
+      <h3>Party-wise performance</h3>
+      <p class="muted">
+        NOTA is never shown as leading or winning a seat — under Indian election law a NOTA
+        majority does not elect NOTA, the leading actual candidate still wins. NOTA's own
+        count is reported separately above, as it is on every real ballot.
+      </p>
+      <div id="pmPartyChart"></div>
+      <div id="pmPartyTable" style="margin-top:14px;"></div>
+    </div>
+
+    <div class="card">
+      <h3>Constituency-wise results</h3>
+      <div class="row">
+        <div>
+          <label for="pmResultsState">Filter by state</label>
+          <select id="pmResultsState"><option value="">All states</option></select>
+        </div>
+      </div>
+      <div id="pmResultsTable"><p class="muted">Loading…</p></div>
+    </div>
+  </section>
+
+  <!-- ── CM election results ──────────────────────────────────────── -->
+  <section id="panel-cmresults" hidden>
+    <h2>CM election results</h2>
+    <p class="muted">
+      Tallies are computed from the ballot table on every request, so what you see is current
+      to the second. Ballots carry no voter identity, so counting cannot reveal how anyone voted.
+    </p>
+    <div class="card">
+      <div class="row">
+        <div>
+          <label for="cmResultsElection">Election</label>
+          <select id="cmResultsElection"></select>
+        </div>
+        <div>
+          <label for="cmAutoRefresh">Refresh</label>
+          <div class="toggle">
+            <input type="checkbox" id="cmAutoRefresh" checked>
+            <label for="cmAutoRefresh" style="margin:0;font-weight:400">
+              Auto-refresh every 5 seconds
+            </label>
+          </div>
+        </div>
+      </div>
+      <button class="action" id="cmRefreshResults">Refresh now</button>
+      <a class="action ghost" id="cmExportResults" style="display:inline-block;text-decoration:none;">
+        Download as Excel
+      </a>
+      <span class="muted" id="cmResultsUpdated"></span>
+      <div id="cmResultsHeader" style="margin-top:14px;"></div>
+    </div>
+
+    <div class="grid" id="cmResultsStats"></div>
+
+    <div class="card">
+      <h3>Party-wise performance</h3>
+      <p class="muted">
+        NOTA is never shown as leading or winning a seat — under Indian election law a NOTA
+        majority does not elect NOTA, the leading actual candidate still wins. NOTA's own
+        count is reported separately above, as it is on every real ballot.
+      </p>
+      <div id="cmPartyChart"></div>
+      <div id="cmPartyTable" style="margin-top:14px;"></div>
+    </div>
+
+    <div class="card">
+      <h3>Constituency-wise results</h3>
+      <div class="row">
+        <div>
+          <label for="cmResultsState">Filter by state</label>
+          <select id="cmResultsState"><option value="">All states</option></select>
+        </div>
+      </div>
+      <div id="cmResultsTable"><p class="muted">Loading…</p></div>
+    </div>
+  </section>
+
+  <!-- ── Polling control ─────────────────────────────────────────── -->
+  <section id="panel-polling" hidden>
+    <h2>Polling control</h2>
+    <p class="muted">
+      Within one type — PM or CM — exactly one election can be open at a time. Opening one
+      closes the other of the same type, which is what lets a terminal determine the right
+      ballot without being configured per booth. PM and CM are independent of each other.
+    </p>
+    <div id="pollingNotice"></div>
+
+    <div class="grid" id="pollingStatus"></div>
+
+    <div class="card">
+      <table>
+        <thead><tr><th>Election</th><th>Type</th><th>State</th><th>Action</th></tr></thead>
+        <tbody id="pollingRows"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Start the next election</h3>
+      <p class="muted">
+        Creates a new election for the type and opens it, closing whichever one of that
+        type was open before. PM and CM each count up from their own most recent cycle.
+      </p>
+      <button class="action" id="nextPmElection">Start next PM election</button>
+      <button class="action" id="nextCmElection">Start next CM election</button>
+    </div>
+
+    <div class="card">
+      <h3>CM polling by state</h3>
+      <p class="muted" id="cmGateSummary">
+        A CM election is not one national event — each state runs its own. A freshly-started
+        CM election opens with every state closed; open each state here when that state's
+        polling is ready to begin.
+      </p>
+      <div class="row">
+        <div>
+          <label for="cmGateElection">CM election</label>
+          <select id="cmGateElection"></select>
+        </div>
+        <div>
+          <label for="cmGateState">State</label>
+          <select id="cmGateState"></select>
+        </div>
+      </div>
+      <button class="action go" id="openCmState">Open this state</button>
+      <button class="action" id="loadCmOpenStates">Refresh list</button>
+      <div id="cmOpenStates" style="margin-top:14px;"></div>
+    </div>
+
+    <div class="card">
+      <h3>Terminal activity</h3>
+      <p class="muted">
+        Live votes recorded per terminal for whichever election is currently open — a booth
+        that has gone quiet shows up here immediately. Terminal registration and
+        provisioning live on the Terminals page; this is live monitoring only.
+      </p>
+      <div id="pollingMachineChart"><p class="muted">No election is currently open.</p></div>
+      <div id="pollingMachineTable" style="margin-top:14px;"></div>
+    </div>
+
+    <div class="notice">
+      There is no reset or clear option. Recorded votes are immutable in the database, so
+      re-running a demonstration means restoring a database snapshot.
+    </div>
+  </section>
+
+  <!-- ── Terminals ───────────────────────────────────────────────── -->
+  <section id="panel-terminals" hidden>
+    <h2>Voting terminals</h2>
+    <p class="muted">
+      Each terminal has its own credentials, so one can be revoked without disturbing the
+      others. A provisioning secret is displayed once and never again.
+    </p>
+    <div id="terminalNotice"></div>
+    <div class="card">
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Label</th><th>Booth</th><th>Status</th>
+              <th>Last seen</th><th>Action</th></tr>
+        </thead>
+        <tbody id="terminalRows"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Add a terminal</h3>
+      <div class="row">
+        <div>
+          <label for="newMachineId">Terminal ID</label>
+          <input id="newMachineId" placeholder="PI-WARD-02" autocomplete="off">
+        </div>
+        <div>
+          <label for="newMachineLabel">Label</label>
+          <input id="newMachineLabel" placeholder="Ward 02 Terminal 1" autocomplete="off">
+        </div>
+        <div>
+          <label for="newMachineBooth">Booth name</label>
+          <input id="newMachineBooth" placeholder="Ward 02" autocomplete="off">
+        </div>
+      </div>
+      <button class="action go" id="addMachine">Add terminal</button>
+    </div>
+  </section>
+
+  <!-- ── Ledger ──────────────────────────────────────────────────── -->
+  <section id="panel-ledger" hidden>
+    <h2>Ledger audit</h2>
+    <p class="muted">
+      Every recorded vote is committed to a hash chain persisted in the database. Verification
+      recomputes the whole chain, so any alteration to a stored ballot is detectable. Entries
+      are anonymous: the ledger proves nothing was changed without revealing who voted for whom.
+    </p>
+    <div id="ledgerNotice"></div>
+    <button class="action" id="validateLedger">Verify chain integrity</button>
+    <button class="action ghost" id="loadLedger">Load blocks</button>
+    <div class="card" id="ledgerBlocksCard" hidden>
+      <h3>Blocks</h3>
+      <table>
+        <thead>
+          <tr><th class="num">#</th><th>Ballot</th><th class="num">Election</th>
+              <th class="num">Candidate</th><th>Terminal</th><th>Hash</th><th>Verified</th></tr>
+        </thead>
+        <tbody id="ledgerRows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── Voters ──────────────────────────────────────────────────── -->
+  <section id="panel-voters" hidden>
+    <h2>Voter registration</h2>
+    <div id="voterNotice"></div>
+    <div class="card">
+      <div class="row">
+        <div>
+          <label for="voterNameInput">Full name</label>
+          <input id="voterNameInput" autocomplete="off">
+        </div>
+      </div>
+      <div class="muted">
+        Voter ID and NFC card ID are assigned automatically on registration — the two are
+        always the same value, so there is nothing to type here. The assigned ID appears
+        below once the voter is registered.
+      </div>
+      <div class="row">
+        <div>
+          <label for="voterMobile">Mobile number</label>
+          <input id="voterMobile" inputmode="numeric" maxlength="10" placeholder="10-digit number" autocomplete="off">
+        </div>
+        <div>
+          <label for="voterDob">Date of birth</label>
+          <input type="date" id="voterDob">
+        </div>
+      </div>
+      <div class="muted" style="margin-top:-8px;">
+        A voter must be at least 18 years old on the day of registration — the minimum
+        voting age under Article 326 of the Constitution. Registration is blocked below
+        that age.
+      </div>
+      <div class="row">
+        <div>
+          <label for="voterState">State</label>
+          <select id="voterState"></select>
+        </div>
+        <div>
+          <label for="voterDistrict">District</label>
+          <select id="voterDistrict"><option value="">Select a state first</option></select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="voterLs">Lok Sabha constituency (PM ballot)</label>
+          <select id="voterLs"></select>
+        </div>
+        <div>
+          <label for="voterVs">Vidhan Sabha constituency (CM ballot)</label>
+          <select id="voterVs"></select>
+        </div>
+      </div>
+      <label for="voterPhoto">Photograph (shown on the terminal for identity confirmation)</label>
+      <input type="file" id="voterPhoto" accept="image/jpeg,image/png">
+      <div class="muted" style="margin-top:4px;">JPG or PNG only, under 5 MB.</div>
+
+      <h3>Biometric enrollment</h3>
+      <div class="notice">
+        A fingerprint template is enrolled automatically when this voter is registered —
+        no separate capture step is needed here. Until the MFS100 scanner is connected,
+        this uses the hardware simulation: registration returns a fingerprint code tied to
+        this voter, which the simulated scanner accepts in place of a real fingerprint.
+        That code will be shown below once you register the voter.
+      </div>
+
+      <button class="action go" id="addVoter">Register voter</button>
+    </div>
+    <div class="card">
+      <h3>Registered voters</h3>
+      <button class="action ghost" id="loadVoters">Load voters</button>
+      <table>
+        <thead>
+          <tr><th>Voter ID</th><th>Name</th><th>Age</th><th>Mobile</th><th>Card</th><th>Fingerprint</th><th>Active</th></tr>
+        </thead>
+        <tbody id="voterRows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── Candidates ──────────────────────────────────────────────── -->
+  <section id="panel-candidates" hidden>
+    <h2>Candidate registration</h2>
+    <p class="muted">
+      A ballot can hold at most eight candidates, because the terminal has eight candidate
+      buttons.
+    </p>
+    <div id="candidateNotice"></div>
+    <div class="card">
+      <div class="row">
+        <div>
+          <label for="candElection">Election</label>
+          <select id="candElection"></select>
+        </div>
+        <div>
+          <label for="candState">State</label>
+          <select id="candState"></select>
+        </div>
+        <div>
+          <label for="candDistrict">District</label>
+          <select id="candDistrict"><option value="">Select a state first</option></select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="candConstituency">Constituency</label>
+          <select id="candConstituency"></select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="candName">Candidate name</label>
+          <input id="candName" autocomplete="off">
+        </div>
+        <div>
+          <label for="candParty">Party</label>
+          <input id="candParty" autocomplete="off">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="candMobile">Mobile number</label>
+          <input id="candMobile" inputmode="numeric" maxlength="10" placeholder="10-digit number" autocomplete="off">
+        </div>
+        <div>
+          <label for="candDob">Date of birth</label>
+          <input type="date" id="candDob">
+        </div>
+      </div>
+      <div class="muted" style="margin-top:-8px;">
+        A candidate must be at least 25 years old on the day of registration — the minimum
+        candidacy age for both Lok Sabha and Vidhan Sabha elections (Articles 84(b) and
+        173(b)). Registration is blocked below that age.
+      </div>
+      <div class="row">
+        <div>
+          <label for="candPhoto">Candidate photograph</label>
+          <input type="file" id="candPhoto" accept="image/jpeg,image/png">
+          <div class="muted" style="margin-top:4px;">JPG or PNG only, under 5 MB.</div>
+        </div>
+        <div>
+          <label for="candSymbol">Party symbol</label>
+          <input type="file" id="candSymbol" accept="image/jpeg,image/png">
+          <div class="muted" style="margin-top:4px;">JPG or PNG only, under 5 MB.</div>
+        </div>
+      </div>
+      <button class="action go" id="addCandidate">Add candidate</button>
+      <button class="action ghost" id="loadCandidates">Show ballot</button>
+      <table>
+        <thead><tr><th class="num">Slot</th><th>Name</th><th>Party</th><th>Age</th><th>Mobile</th></tr></thead>
+        <tbody id="candidateRows"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+'use strict';
+
+/* ── Request plumbing ──────────────────────────────────────────────────────
+   Every request is same-origin so the session cookie travels, and every
+   mutating request carries the CSRF token Spring Security expects. */
+function csrfToken() {
+  var match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : '';
+}
+
+function api(path, options) {
+  var config = options || {};
+  config.credentials = 'same-origin';
+  config.headers = config.headers || {};
+  config.headers['Accept'] = 'application/json';
+  if (config.method && config.method !== 'GET') {
+    config.headers['Content-Type'] = 'application/json';
+    config.headers['X-XSRF-TOKEN'] = csrfToken();
+  }
+  return fetch(path, config).then(function (response) {
+    if (response.status === 401) {
+      throw new Error('Not signed in. Your session may have expired — sign in again.');
+    }
+    if (response.status === 403) {
+      throw new Error('Request blocked (403). Refresh the page and try again; '
+        + 'if it persists, sign in again.');
+    }
+    return response.text().then(function (body) {
+      if (!body) { return {}; }
+      try { return JSON.parse(body); }
+      catch (e) { throw new Error('Server returned an unexpected reply.'); }
+    });
+  });
+}
+
+function post(path, payload) {
+  return api(path, { method: 'POST', body: JSON.stringify(payload || {}) });
+}
+
+function notify(containerId, message, kind) {
+  var host = document.getElementById(containerId);
+  host.innerHTML = '';
+  var box = document.createElement('div');
+  box.className = 'notice' + (kind ? ' ' + kind : '');
+  box.setAttribute('role', kind === 'bad' ? 'alert' : 'status');
+  box.textContent = message;
+  host.appendChild(box);
+}
+
+/** Same as {@link notify}, plus a large, clearly separated ID callout — used right
+ *  after registering a voter or candidate, since the generated ID is the one piece
+ *  of information from that action worth being unmissable. */
+function notifyWithId(containerId, message, kind, idLabel, idValue) {
+  var host = document.getElementById(containerId);
+  clearChildren(host);
+  var box = document.createElement('div');
+  box.className = 'notice' + (kind ? ' ' + kind : '');
+  box.setAttribute('role', kind === 'bad' ? 'alert' : 'status');
+  var msgLine = document.createElement('div');
+  msgLine.textContent = message;
+  box.appendChild(msgLine);
+
+  if (idValue) {
+    var callout = document.createElement('div');
+    callout.className = 'id-callout';
+    var label = document.createElement('span');
+    label.className = 'id-callout-label';
+    label.textContent = idLabel;
+    var value = document.createElement('span');
+    value.className = 'id-callout-value';
+    value.textContent = idValue;
+    callout.appendChild(label);
+    callout.appendChild(value);
+    box.appendChild(callout);
+  }
+  host.appendChild(box);
+}
+
+function text(value, fallback) {
+  return (value === null || value === undefined || value === '') ? (fallback || '—') : String(value);
+}
+
+function clearChildren(node) { while (node.firstChild) { node.removeChild(node.firstChild); } }
+
+function row(cells) {
+  var tr = document.createElement('tr');
+  cells.forEach(function (cell) {
+    var td = document.createElement('td');
+    if (cell && cell.nodeType) { td.appendChild(cell); }
+    else if (cell && cell.html !== undefined) { td.innerHTML = cell.html; td.className = cell.cls || ''; }
+    else { td.textContent = text(cell); }
+    tr.appendChild(td);
+  });
+  return tr;
+}
+
+function fillSelect(select, items, valueKey, labelFn, placeholder) {
+  clearChildren(select);
+  if (placeholder) {
+    var blank = document.createElement('option');
+    blank.value = '';
+    blank.textContent = placeholder;
+    select.appendChild(blank);
+  }
+  items.forEach(function (item) {
+    var option = document.createElement('option');
+    option.value = item[valueKey];
+    option.textContent = labelFn(item);
+    select.appendChild(option);
+  });
+}
+
+/* ── Tabs ─────────────────────────────────────────────────────────────── */
+var tabs = Array.prototype.slice.call(document.querySelectorAll('nav button'));
+tabs.forEach(function (tab) {
+  tab.addEventListener('click', function () {
+    tabs.forEach(function (other) {
+      var active = other === tab;
+      other.setAttribute('aria-selected', active ? 'true' : 'false');
+      document.getElementById('panel-' + other.dataset.panel).hidden = !active;
+    });
+  });
+});
+
+/* ── Session ──────────────────────────────────────────────────────────── */
+function loadIdentity() {
+  return api('/auth/me').then(function (me) {
+    document.getElementById('whoName').textContent = text(me.username, 'unknown');
+    document.getElementById('whoRoles').textContent =
+      (me.roles || []).join(', ');
+  });
+}
+
+/* ── Elections and polling ────────────────────────────────────────────── */
+var elections = [];
+
+function loadElections() {
+  return api('/admin/elections').then(function (data) {
+    elections = data || [];
+
+    var pmElections = elections.filter(function (e) { return e.type === 'PM'; });
+    var cmElections = elections.filter(function (e) { return e.type === 'CM'; });
+
+    fillSelect(document.getElementById('pmResultsElection'), pmElections, 'id',
+      function (e) { return e.name + (e.isActive ? ' — open' : ''); });
+    fillSelect(document.getElementById('cmResultsElection'), cmElections, 'id',
+      function (e) { return e.name + (e.isActive ? ' — open' : ''); });
+    fillSelect(document.getElementById('candElection'), elections, 'id',
+      function (e) { return e.name + ' [' + e.type + ']'; }, 'Select an election');
+
+    var activePm = pmElections.filter(function (e) { return e.isActive; })[0] || pmElections[0];
+    var activeCm = cmElections.filter(function (e) { return e.isActive; })[0] || cmElections[0];
+    if (activePm) { document.getElementById('pmResultsElection').value = activePm.id; }
+    if (activeCm) { document.getElementById('cmResultsElection').value = activeCm.id; }
+
+    renderPollingRows();
+    refreshPollingStatus();
+    refreshPollingMachines();
+    return elections;
+  });
+}
+
+/** Two headline cards — one per election type — showing whether polling is open and,
+ *  if so, a live vote count without leaving this page. */
+function refreshPollingStatus() {
+  var host = document.getElementById('pollingStatus');
+  clearChildren(host);
+
+  ['PM', 'CM'].forEach(function (type) {
+    var typeElections = elections.filter(function (e) { return e.type === type; });
+    var active = typeElections.filter(function (e) { return e.isActive; })[0];
+    var latest = active || typeElections[typeElections.length - 1];
+
+    var card = document.createElement('div');
+    card.className = 'stat';
+    var value = document.createElement('div');
+    value.className = 'value';
+    value.style.fontSize = '17px';
+    value.textContent = latest ? latest.name : 'No ' + type + ' election yet';
+    var label = document.createElement('div');
+    label.className = 'label';
+    label.textContent = type === 'PM' ? 'Lok Sabha (PM)' : 'Vidhan Sabha (CM)';
+    card.appendChild(value);
+    card.appendChild(label);
+
+    if (latest) {
+      var pillRow = document.createElement('div');
+      pillRow.style.margin = '10px 0';
+      pillRow.appendChild(statusPill(!!latest.isActive, 'Polling open', 'Closed'));
+      card.appendChild(pillRow);
+
+      if (latest.isActive) {
+        var liveNumbers = document.createElement('div');
+        liveNumbers.className = 'muted';
+        liveNumbers.textContent = 'Loading live count…';
+        card.appendChild(liveNumbers);
+        api('/admin/stats/' + latest.id).then(function (stats) {
+          liveNumbers.textContent = formatCount(stats.totalVotesCast) + ' votes recorded — '
+            + text(stats.turnoutPercent, '0') + '% polled so far';
+        }).catch(function () { liveNumbers.textContent = ''; });
+      }
+    }
+    host.appendChild(card);
+  });
+}
+
+/** Live votes-per-terminal for whichever election(s) are currently open — the
+ *  operational counterpart to the results pages, which show only closed/declared
+ *  numbers plus live vote *totals*, not per-booth activity. */
+function refreshPollingMachines() {
+  var chartHost = document.getElementById('pollingMachineChart');
+  var tableHost = document.getElementById('pollingMachineTable');
+  var active = elections.filter(function (e) { return e.isActive; });
+
+  if (!active.length) {
+    clearChildren(chartHost);
+    chartHost.innerHTML = '<p class="muted">No election is currently open.</p>';
+    clearChildren(tableHost);
+    return;
+  }
+
+  Promise.all(active.map(function (election) {
+    return api('/admin/results/' + election.id + '/machines')
+      .then(function (machines) { return { election: election, machines: machines || [] }; });
+  })).then(function (results) {
+    var items = [];
+    results.forEach(function (r) {
+      r.machines.forEach(function (m) {
+        items.push({
+          label: m.booth_name || m.machine_id,
+          sub: (results.length > 1 ? r.election.type + ' · ' : '') + m.machine_id
+            + ' · ' + (m.status === 'ACTIVE' ? 'active' : m.status.toLowerCase()),
+          value: Number(m.votes || 0),
+          flagged: m.status !== 'ACTIVE'
+        });
+      });
+    });
+    renderHBarChart(chartHost, items, {});
+
+    clearChildren(tableHost);
+    if (!items.length) {
+      tableHost.innerHTML = '<p class="muted">No terminals registered.</p>';
+      return;
+    }
+    var table = document.createElement('table');
+    var head = document.createElement('thead');
+    head.innerHTML = '<tr><th>Terminal</th><th>Booth</th>'
+      + (results.length > 1 ? '<th>Election</th>' : '')
+      + '<th>Status</th><th>Last seen</th><th class="num">Votes</th></tr>';
+    table.appendChild(head);
+    var body = document.createElement('tbody');
+    results.forEach(function (r) {
+      r.machines.forEach(function (m) {
+        var pill = document.createElement('span');
+        pill.className = 'pill ' + (m.status === 'ACTIVE' ? 'ok' : m.status === 'REVOKED' ? 'bad' : 'warn');
+        pill.textContent = m.status;
+        var cells = [m.machine_id, m.booth_name];
+        if (results.length > 1) { cells.push(r.election.type); }
+        cells.push(pill, m.last_seen_at ? new Date(m.last_seen_at).toLocaleString() : 'never',
+          { html: String(m.votes), cls: 'num' });
+        body.appendChild(row(cells));
+      });
+    });
+    table.appendChild(body);
+    tableHost.appendChild(table);
+  }).catch(function (error) {
+    chartHost.innerHTML = '';
+    notify('pollingNotice', error.message, 'bad');
+  });
+}
+
+function renderPollingRows() {
+  var body = document.getElementById('pollingRows');
+  clearChildren(body);
+  elections.forEach(function (election) {
+    var state = document.createElement('span');
+    state.className = 'pill ' + (election.isActive ? 'ok' : 'warn');
+    state.textContent = election.isActive ? 'Polling open' : 'Closed';
+
+    var button = document.createElement('button');
+    button.className = 'action tiny ' + (election.isActive ? 'warn' : 'go');
+    button.style.margin = '0';
+    button.textContent = election.isActive ? 'Close polling' : 'Open polling';
+    button.addEventListener('click', function () {
+      var verb = election.isActive ? 'close' : 'open';
+      post('/admin/elections/' + election.id + '/' + verb)
+        .then(function (result) {
+          notify('pollingNotice', result.message, result.success ? 'ok' : 'bad');
+          return loadElections();
+        })
+        .catch(function (error) { notify('pollingNotice', error.message, 'bad'); });
+    });
+
+    body.appendChild(row([election.name, election.type, state, button]));
+  });
+}
+
+/* ── Next election ────────────────────────────────────────────────────── */
+function capitalize(word) { return word.charAt(0).toUpperCase() + word.slice(1); }
+
+['pm', 'cm'].forEach(function (prefix) {
+  document.getElementById('next' + capitalize(prefix) + 'Election').addEventListener('click', function () {
+    post('/admin/elections/next/' + prefix.toUpperCase())
+      .then(function (result) {
+        notify('pollingNotice', result.message, result.success ? 'ok' : 'bad');
+        return loadElections();
+      })
+      .then(function () { loadCmGateElections(); })
+      .catch(function (error) { notify('pollingNotice', error.message, 'bad'); });
+  });
+});
+
+/* ── CM polling by state ─────────────────────────────────────────────── */
+function loadCmGateElections() {
+  var cmElections = elections.filter(function (e) { return e.type === 'CM'; });
+  fillSelect(document.getElementById('cmGateElection'), cmElections, 'id',
+    function (e) { return e.name + (e.isActive ? ' — open' : ' — closed'); }, 'Select a CM election');
+  var active = cmElections.filter(function (e) { return e.isActive; })[0];
+  if (active) { document.getElementById('cmGateElection').value = active.id; }
+}
+
+function loadCmOpenStates() {
+  var electionId = document.getElementById('cmGateElection').value;
+  var host = document.getElementById('cmOpenStates');
+  var summary = document.getElementById('cmGateSummary');
+  if (!electionId) { host.innerHTML = '<p class="muted">Choose a CM election above.</p>'; return; }
+
+  api('/admin/elections/' + electionId + '/open-states').then(function (openStates) {
+    var eligibleStates = allStates.filter(function (s) { return Number(s.vs_seats) > 0; });
+    summary.textContent = openStates.length + ' of ' + eligibleStates.length
+      + ' states with an assembly are open for this election.';
+
+    clearChildren(host);
+    if (!openStates.length) {
+      host.innerHTML = '<p class="muted">No states open yet for this election.</p>';
+      return;
+    }
+    var table = document.createElement('table');
+    var head = document.createElement('thead');
+    head.innerHTML = '<tr><th>State</th><th>Opened</th><th>Action</th></tr>';
+    table.appendChild(head);
+    var body = document.createElement('tbody');
+    openStates.forEach(function (item) {
+      var closeButton = document.createElement('button');
+      closeButton.className = 'action tiny warn';
+      closeButton.style.margin = '0';
+      closeButton.textContent = 'Close';
+      closeButton.addEventListener('click', function () {
+        fetch('/admin/elections/' + electionId + '/open-states/' + item.state_id, {
+          method: 'DELETE',
+          headers: { 'X-XSRF-TOKEN': csrfToken() }
+        }).then(function () { loadCmOpenStates(); })
+          .catch(function (error) { notify('pollingNotice', error.message, 'bad'); });
+      });
+      body.appendChild(row([item.state_name,
+        item.opened_at ? new Date(item.opened_at).toLocaleString() : '—', closeButton]));
+    });
+    table.appendChild(body);
+    host.appendChild(table);
+  }).catch(function (error) {
+    host.innerHTML = '';
+    notify('pollingNotice', error.message, 'bad');
+  });
+}
+
+document.getElementById('cmGateElection').addEventListener('change', loadCmOpenStates);
+document.getElementById('loadCmOpenStates').addEventListener('click', loadCmOpenStates);
+document.getElementById('openCmState').addEventListener('click', function () {
+  var electionId = document.getElementById('cmGateElection').value;
+  var stateId = document.getElementById('cmGateState').value;
+  if (!electionId || !stateId) {
+    notify('pollingNotice', 'Choose both a CM election and a state.', 'bad');
+    return;
+  }
+  post('/admin/elections/' + electionId + '/open-states/' + stateId)
+    .then(function (result) {
+      notify('pollingNotice', result.message, result.success ? 'ok' : 'bad');
+      loadCmOpenStates();
+    })
+    .catch(function (error) { notify('pollingNotice', error.message, 'bad'); });
+});
+
+/* ── Excel export ─────────────────────────────────────────────────────── */
+['pm', 'cm'].forEach(function (prefix) {
+  document.getElementById(prefix + 'ExportResults').addEventListener('click', function (event) {
+    var electionId = document.getElementById(prefix + 'ResultsElection').value;
+    if (!electionId) {
+      event.preventDefault();
+      notify('pollingNotice', 'Choose an election first.', 'bad');
+      return;
+    }
+    this.href = '/admin/results/' + electionId + '/export';
+  });
+});
+
+/* ── Live results ─────────────────────────────────────────────────────── */
+
+function statCard(label, value) {
+  var card = document.createElement('div');
+  card.className = 'stat';
+  var v = document.createElement('div');
+  v.className = 'value';
+  v.textContent = value;
+  var l = document.createElement('div');
+  l.className = 'label';
+  l.textContent = label;
+  card.appendChild(v);
+  card.appendChild(l);
+  return card;
+}
+
+/** Party | Seats table for the party-performance card. `label` is "Won" once the
+ *  election is closed, "Leading" while it's still open — matching the pill wording
+ *  used in the results table itself, so the two never disagree. */
+function partySeatsTable(rows, label) {
+  var table = document.createElement('table');
+  var head = document.createElement('thead');
+  head.innerHTML = '<tr><th>Party</th><th class="num">' + label + '</th></tr>';
+  table.appendChild(head);
+  var body = document.createElement('tbody');
+  rows.forEach(function (item) {
+    var swatch = document.createElement('span');
+    swatch.className = 'swatch';
+    swatch.style.background = chartColor(item.party_color, 0);
+    var name = document.createElement('span');
+    name.appendChild(swatch);
+    name.appendChild(document.createTextNode(item.party));
+    body.appendChild(row([name, { html: String(item.seats), cls: 'num' }]));
+  });
+  table.appendChild(body);
+  return table;
+}
+
+/* ── Chart helpers ────────────────────────────────────────────────────── */
+
+// Matches the Indian-flag palette in :root, plus a few muted complements for
+// parties/segments beyond what a fixed palette covers.
+var CHART_PALETTE = ['#0B1F4B', '#FF9933', '#0F7A1E', '#9C4600', '#5B5F6B', '#B31C1C', '#0A571A', '#D9A441'];
+
+function chartColor(explicitColor, fallbackIndex) {
+  return /^#[0-9A-Fa-f]{6}$/.test(explicitColor || '')
+    ? explicitColor : CHART_PALETTE[fallbackIndex % CHART_PALETTE.length];
+}
+
+function formatCount(n) { return Number(n || 0).toLocaleString(); }
+
+/**
+ * Renders a horizontal bar chart into `container`. `items`:
+ * [{label, sub, value, flagged}]. `sub` is an optional second line under the
+ * label (e.g. raw counts behind a percentage bar). `flagged` rows render in
+ * the alert colour — used for a booth that looks like it has gone quiet.
+ * `options.max` overrides the scale (e.g. force a 0-100 scale for
+ * percentages); `options.formatValue(item)` overrides the trailing number.
+ */
+function renderHBarChart(container, items, options) {
+  options = options || {};
+  clearChildren(container);
+  if (!items.length) {
+    container.innerHTML = '<p class="muted">No data yet.</p>';
+    return;
+  }
+  var max = options.max || Math.max.apply(null, items.map(function (i) { return i.value; })) || 1;
+  var chart = document.createElement('div');
+  chart.className = 'hbar-chart';
+  items.forEach(function (item, i) {
+    var rowEl = document.createElement('div');
+    rowEl.className = 'hbar-row' + (item.flagged ? ' hbar-flagged' : '');
+
+    var name = document.createElement('div');
+    name.className = 'hbar-name';
+    var title = document.createElement('div');
+    title.className = 'hbar-name-title';
+    title.textContent = item.label;
+    title.title = item.label;
+    name.appendChild(title);
+    if (item.sub) {
+      var sub = document.createElement('div');
+      sub.className = 'hbar-name-sub';
+      sub.textContent = item.sub;
+      name.appendChild(sub);
+    }
+
+    var track = document.createElement('div');
+    track.className = 'hbar-track';
+    var fill = document.createElement('span');
+    fill.className = 'hbar-fill';
+    fill.style.width = Math.max(item.value * 100 / max, 0) + '%';
+    if (item.colored) { fill.style.background = chartColor(item.color, i); }
+    track.appendChild(fill);
+
+    var valueEl = document.createElement('div');
+    valueEl.className = 'hbar-value';
+    valueEl.textContent = options.formatValue ? options.formatValue(item) : formatCount(item.value);
+
+    rowEl.appendChild(name);
+    rowEl.appendChild(track);
+    rowEl.appendChild(valueEl);
+    chart.appendChild(rowEl);
+  });
+  container.appendChild(chart);
+}
+
+var lastLeaders = { pm: [], cm: [] };
+
+function statusPill(isActive, openLabel, closedLabel) {
+  var pill = document.createElement('span');
+  pill.className = 'pill ' + (isActive ? 'warn' : 'ok');
+  pill.textContent = isActive ? (openLabel || 'Live counting') : (closedLabel || 'Results declared');
+  return pill;
+}
+
+function currentElection(electionId) {
+  return elections.filter(function (e) { return String(e.id) === String(electionId); })[0];
+}
+
+/** Renders the constituency-wise table from the already-fetched `lastLeaders[prefix]`,
+ *  filtered to whichever state is picked in the dropdown — no network call, so the
+ *  filter feels instant. */
+function renderResultsTable(prefix) {
+  var stateFilter = document.getElementById(prefix + 'ResultsState').value;
+  var leaders = lastLeaders[prefix] || [];
+  var filtered = stateFilter
+    ? leaders.filter(function (l) { return String(l.state_id) === String(stateFilter); })
+    : leaders;
+
+  var host = document.getElementById(prefix + 'ResultsTable');
+  clearChildren(host);
+  if (!filtered.length) {
+    host.innerHTML = '<p class="muted">'
+      + (leaders.length ? 'No constituencies reporting in this state yet.' : 'No votes recorded yet.')
+      + '</p>';
+    return;
+  }
+
+  var election = currentElection(document.getElementById(prefix + 'ResultsElection').value);
+  var isActive = election ? election.isActive : true;
+
+  var table = document.createElement('table');
+  var head = document.createElement('thead');
+  head.innerHTML = '<tr><th>State</th><th>Constituency</th><th>Leading candidate</th>'
+    + '<th>Party</th><th class="num">Votes</th><th class="num">Margin</th><th>Status</th></tr>';
+  table.appendChild(head);
+  var body = document.createElement('tbody');
+  filtered.forEach(function (item) {
+    body.appendChild(row([item.state_name, item.constituency_name, item.candidate_name,
+      item.party, { html: String(item.votes), cls: 'num' },
+      { html: String(item.margin), cls: 'num' }, statusPill(isActive, 'Leading', 'Won')]));
+  });
+  table.appendChild(body);
+  host.appendChild(table);
+}
+
+function refreshResults(prefix) {
+  var electionId = document.getElementById(prefix + 'ResultsElection').value;
+  if (!electionId) { return; }
+
+  api('/admin/results/' + electionId).then(function (data) {
+    var election = currentElection(electionId);
+    var isActive = election ? election.isActive : true;
+
+    var header = document.getElementById(prefix + 'ResultsHeader');
+    clearChildren(header);
+    var titleRow = document.createElement('div');
+    titleRow.style.cssText = 'display:flex;align-items:center;gap:10px;flex-wrap:wrap';
+    var name = document.createElement('strong');
+    name.style.fontSize = '16px';
+    name.textContent = election ? election.name : ('Election #' + electionId);
+    titleRow.appendChild(name);
+    titleRow.appendChild(statusPill(isActive));
+    header.appendChild(titleRow);
+
+    var stats = document.getElementById(prefix + 'ResultsStats');
+    clearChildren(stats);
+    stats.appendChild(statCard('Electors', formatCount(data.eligibleVoters)));
+    stats.appendChild(statCard('Votes polled', formatCount(data.totalVotesCast)));
+    stats.appendChild(statCard('% polled', text(data.turnoutPercent, '0') + '%'));
+    stats.appendChild(statCard('NOTA',
+      formatCount(data.notaVotes) + ' (' + text(data.notaPercent, '0') + '%)'));
+    stats.appendChild(statCard('Constituencies reporting',
+      formatCount(data.constituenciesReporting) + ' of ' + formatCount(data.constituenciesWithCandidates)));
+
+    var leaders = data.constituencyLeaders || [];
+    var closest = leaders.length
+      ? leaders.reduce(function (a, b) { return Number(b.margin) < Number(a.margin) ? b : a; }) : null;
+    stats.appendChild(statCard('Closest contest',
+      closest ? closest.constituency_name + ' — margin ' + formatCount(closest.margin) : 'None yet'));
+
+    lastLeaders[prefix] = leaders;
+    renderResultsTable(prefix);
+
+    document.getElementById(prefix + 'ResultsUpdated').textContent =
+      'Updated ' + new Date().toLocaleTimeString();
+  }).catch(function (error) {
+    document.getElementById(prefix + 'ResultsUpdated').textContent = error.message;
+  });
+
+  api('/admin/results/' + electionId + '/party-seats').then(function (seats) {
+    seats = seats || [];
+    var election = currentElection(electionId);
+    var isActive = election ? election.isActive : true;
+    var label = isActive ? 'Leading' : 'Won';
+
+    renderHBarChart(
+      document.getElementById(prefix + 'PartyChart'),
+      seats.map(function (p) {
+        return { label: p.party, sub: label, value: Number(p.seats || 0),
+                 colored: true, color: p.party_color };
+      }),
+      {}
+    );
+
+    var tableHost = document.getElementById(prefix + 'PartyTable');
+    clearChildren(tableHost);
+    if (!seats.length) {
+      tableHost.innerHTML = '<p class="muted">No votes yet.</p>';
+    } else {
+      tableHost.appendChild(partySeatsTable(seats, label));
+    }
+  }).catch(function () { /* the header above already reports failures */ });
+}
+
+var refreshHandles = { pm: null, cm: null };
+
+function applyAutoRefresh(prefix) {
+  if (refreshHandles[prefix]) { clearInterval(refreshHandles[prefix]); refreshHandles[prefix] = null; }
+  if (document.getElementById(prefix + 'AutoRefresh').checked) {
+    refreshHandles[prefix] = setInterval(function () { refreshResults(prefix); }, 5000);
+  }
+}
+
+['pm', 'cm'].forEach(function (prefix) {
+  document.getElementById(prefix + 'RefreshResults')
+    .addEventListener('click', function () { refreshResults(prefix); });
+  document.getElementById(prefix + 'ResultsElection')
+    .addEventListener('change', function () { refreshResults(prefix); });
+  document.getElementById(prefix + 'AutoRefresh')
+    .addEventListener('change', function () { applyAutoRefresh(prefix); });
+  document.getElementById(prefix + 'ResultsState')
+    .addEventListener('change', function () { renderResultsTable(prefix); });
+});
+/* ── Terminals ────────────────────────────────────────────────────────── */
+function loadMachines() {
+  return api('/admin/machines').then(function (machines) {
+    var body = document.getElementById('terminalRows');
+    clearChildren(body);
+    (machines || []).forEach(function (machine) {
+      var pill = document.createElement('span');
+      pill.className = 'pill ' + (machine.status === 'ACTIVE' ? 'ok'
+        : machine.status === 'REVOKED' ? 'bad' : 'warn');
+      pill.textContent = machine.status;
+
+      var actions = document.createElement('div');
+
+      var provision = document.createElement('button');
+      provision.className = 'action tiny warn';
+      provision.textContent = machine.provisioned ? 'Re-issue secret' : 'Issue secret';
+      provision.addEventListener('click', function () {
+        var confirmed = !machine.provisioned || window.confirm(
+          'Re-issuing rotates this terminal\'s signing key and immediately invalidates its '
+          + 'current token. The terminal will stop working until the new secret is entered '
+          + 'in its config. Continue?');
+        if (!confirmed) { return; }
+        post('/admin/machines/' + machine.machineId + '/provision')
+          .then(function (result) {
+            if (result.success) {
+              notify('terminalNotice',
+                'Provisioning secret for ' + machine.machineId + ' — copy it into that '
+                + 'terminal\'s config.properties now, it will not be shown again: '
+                + result.provisioningSecret, 'secret');
+            } else {
+              notify('terminalNotice', result.message, 'bad');
+            }
+            return loadMachines();
+          })
+          .catch(function (error) { notify('terminalNotice', error.message, 'bad'); });
+      });
+      actions.appendChild(provision);
+
+      if (machine.status !== 'REVOKED') {
+        var revoke = document.createElement('button');
+        revoke.className = 'action tiny danger';
+        revoke.textContent = 'Revoke';
+        revoke.addEventListener('click', function () {
+          if (!window.confirm('Revoke ' + machine.machineId
+              + '? Its tokens stop working immediately and it cannot accept votes.')) { return; }
+          post('/admin/machines/' + machine.machineId + '/revoke')
+            .then(function (result) {
+              notify('terminalNotice', result.message, result.success ? 'ok' : 'bad');
+              return loadMachines();
+            })
+            .catch(function (error) { notify('terminalNotice', error.message, 'bad'); });
+        });
+        actions.appendChild(revoke);
+      }
+
+      body.appendChild(row([machine.machineId, machine.label, machine.boothName, pill,
+        machine.lastSeenAt ? new Date(machine.lastSeenAt).toLocaleString() : 'never',
+        actions]));
+    });
+  });
+}
+
+document.getElementById('addMachine').addEventListener('click', function () {
+  post('/admin/machines', {
+    machineId: document.getElementById('newMachineId').value,
+    label: document.getElementById('newMachineLabel').value,
+    boothName: document.getElementById('newMachineBooth').value
+  }).then(function (result) {
+    notify('terminalNotice', result.message, result.success ? 'ok' : 'bad');
+    if (result.success) {
+      document.getElementById('newMachineId').value = '';
+      document.getElementById('newMachineLabel').value = '';
+      document.getElementById('newMachineBooth').value = '';
+    }
+    return loadMachines();
+  }).catch(function (error) { notify('terminalNotice', error.message, 'bad'); });
+});
+
+/* ── Ledger ───────────────────────────────────────────────────────────── */
+document.getElementById('validateLedger').addEventListener('click', function () {
+  api('/admin/ledger/validate').then(function (result) {
+    notify('ledgerNotice', result.message, result.valid ? 'ok' : 'bad');
+  }).catch(function (error) { notify('ledgerNotice', error.message, 'bad'); });
+});
+
+document.getElementById('loadLedger').addEventListener('click', function () {
+  api('/admin/ledger').then(function (data) {
+    notify('ledgerNotice', data.message, data.valid ? 'ok' : 'bad');
+    document.getElementById('ledgerBlocksCard').hidden = false;
+    var body = document.getElementById('ledgerRows');
+    clearChildren(body);
+    (data.blocks || []).forEach(function (block) {
+      var pill = document.createElement('span');
+      pill.className = 'pill ' + (block.hashVerified ? 'ok' : 'bad');
+      pill.textContent = block.hashVerified ? 'intact' : 'ALTERED';
+      body.appendChild(row([
+        { html: String(block.blockNumber), cls: 'num' },
+        text(block.ballotId, 'genesis'),
+        { html: text(block.electionId), cls: 'num' },
+        { html: text(block.candidateId), cls: 'num' },
+        text(block.machineId),
+        String(block.hash).substring(0, 16) + '…',
+        pill]));
+    });
+  }).catch(function (error) { notify('ledgerNotice', error.message, 'bad'); });
+});
+
+/* ── Geography lookups ────────────────────────────────────────────────── */
+var allStates = [];
+
+function loadStates() {
+  return api('/admin/data/states').then(function (states) {
+    allStates = states || [];
+    [['voterState'], ['candState'], ['cmGateState']].forEach(function (pair) {
+      fillSelect(document.getElementById(pair[0]), states, 'id',
+        function (s) { return s.name; }, 'Select a state');
+    });
+    ['pmResultsState', 'cmResultsState'].forEach(function (id) {
+      fillSelect(document.getElementById(id), states, 'id',
+        function (s) { return s.name; }, 'All states');
+    });
+    return states;
+  });
+}
+
+function loadDistricts(stateId, targetId) {
+  var select = document.getElementById(targetId);
+  if (!stateId) {
+    fillSelect(select, [], 'id', function () { return ''; }, 'Select a state first');
+    return Promise.resolve([]);
+  }
+  return api('/admin/data/districts?stateId=' + encodeURIComponent(stateId))
+    .then(function (list) {
+      fillSelect(select, list, 'id', function (d) { return d.name; }, 'Select a district');
+      return list;
+    });
+}
+
+function loadConstituencies(stateId, districtId, type, targetId) {
+  var select = document.getElementById(targetId);
+  if (!stateId) { fillSelect(select, [], 'id', function () { return ''; }, 'Select a state first'); return; }
+  if (!districtId) { fillSelect(select, [], 'id', function () { return ''; }, 'Select a district first'); return; }
+  var query = 'stateId=' + encodeURIComponent(stateId) + '&districtId=' + encodeURIComponent(districtId);
+  return api('/admin/data/constituencies?' + query + (type ? '&type=' + type : ''))
+    .then(function (list) {
+      fillSelect(select, list, 'id', function (c) {
+        return c.name + ' [' + c.type + ']';
+      }, 'Select a constituency');
+    });
+}
+
+document.getElementById('voterState').addEventListener('change', function () {
+  fillSelect(document.getElementById('voterLs'), [], 'id', function () { return ''; }, 'Select a district first');
+  fillSelect(document.getElementById('voterVs'), [], 'id', function () { return ''; }, 'Select a district first');
+  loadDistricts(this.value, 'voterDistrict');
+});
+document.getElementById('voterDistrict').addEventListener('change', function () {
+  var stateId = document.getElementById('voterState').value;
+  loadConstituencies(stateId, this.value, 'LS', 'voterLs');
+  loadConstituencies(stateId, this.value, 'VS', 'voterVs');
+});
+
+function candidateConstituencyType() {
+  var electionId = document.getElementById('candElection').value;
+  var election = elections.filter(function (e) { return String(e.id) === String(electionId); })[0];
+  return election && election.type === 'PM' ? 'LS' : 'VS';
+}
+
+document.getElementById('candState').addEventListener('change', function () {
+  fillSelect(document.getElementById('candConstituency'), [], 'id', function () { return ''; }, 'Select a district first');
+  loadDistricts(this.value, 'candDistrict');
+});
+document.getElementById('candDistrict').addEventListener('change', function () {
+  loadConstituencies(document.getElementById('candState').value, this.value,
+    candidateConstituencyType(), 'candConstituency');
+});
+document.getElementById('candElection').addEventListener('change', function () {
+  loadConstituencies(document.getElementById('candState').value,
+    document.getElementById('candDistrict').value, candidateConstituencyType(), 'candConstituency');
+});
+
+/* ── Voter registration ───────────────────────────────────────────────── */
+var ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png'];
+var MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+function readFileAsBase64(input) {
+  return new Promise(function (resolve, reject) {
+    var file = input.files && input.files[0];
+    if (!file) { resolve(null); return; }
+    if (ALLOWED_IMAGE_TYPES.indexOf(file.type) === -1) {
+      reject(new Error('"' + file.name + '" is not a JPG or PNG image.'));
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      reject(new Error('"' + file.name + '" is '
+        + (file.size / (1024 * 1024)).toFixed(1) + ' MB — the limit is 5 MB.'));
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function () { resolve(String(reader.result)); };
+    reader.onerror = function () { reject(new Error('Could not read "' + file.name + '".')); };
+    reader.readAsDataURL(file);
+  });
+}
+
+document.getElementById('addVoter').addEventListener('click', function () {
+  readFileAsBase64(document.getElementById('voterPhoto')).then(function (photo) {
+    return post('/admin/data/add-voter', {
+      name: document.getElementById('voterNameInput').value,
+      mobileNumber: document.getElementById('voterMobile').value,
+      dateOfBirth: document.getElementById('voterDob').value,
+      stateId: document.getElementById('voterState').value,
+      lsConstituencyId: document.getElementById('voterLs').value,
+      vsConstituencyId: document.getElementById('voterVs').value,
+      photoBase64: photo
+    });
+  }).then(function (result) {
+    if (!result.success) { notify('voterNotice', result.message, 'bad'); return; }
+    var photoNote = result.photoSaved ? '' : ' No photo was attached.';
+    if (result.simulatedFingerprintCode) {
+      notifyWithId('voterNotice', 'Voter registered. The NFC card ID is the same as the '
+        + 'voter ID below.' + photoNote + ' Simulated fingerprint code: '
+        + result.simulatedFingerprintCode + ' — record it with the voter\'s card. '
+        + 'The terminal receives it automatically during a real card read, so this is only '
+        + 'needed for manual testing.', 'secret', 'Voter ID', result.voterId);
+    } else {
+      notifyWithId('voterNotice', 'Voter registered. The NFC card ID is the same as the '
+        + 'voter ID below.' + photoNote, 'ok', 'Voter ID', result.voterId);
+    }
+    document.getElementById('voterNameInput').value = '';
+    document.getElementById('voterMobile').value = '';
+    document.getElementById('voterDob').value = '';
+    document.getElementById('voterPhoto').value = '';
+  }).catch(function (error) { notify('voterNotice', error.message, 'bad'); });
+});
+
+function formatAge(age) {
+  return (age === null || age === undefined || age === '') ? '—' : String(Math.trunc(age));
+}
+
+document.getElementById('loadVoters').addEventListener('click', function () {
+  api('/admin/data/voters').then(function (voters) {
+    var body = document.getElementById('voterRows');
+    clearChildren(body);
+    (voters || []).forEach(function (voter) {
+      var fingerprint = document.createElement('span');
+      fingerprint.className = 'pill ' + (voter.fingerprint_enrolled ? 'ok' : 'warn');
+      fingerprint.textContent = voter.fingerprint_enrolled ? 'enrolled' : 'not enrolled';
+
+      var active = document.createElement('span');
+      active.className = 'pill ' + (voter.card_active ? 'ok' : 'bad');
+      active.textContent = voter.card_active ? 'active' : 'blocked';
+
+      body.appendChild(row([voter.voter_id, voter.name, formatAge(voter.age),
+        voter.mobile_number || '—', voter.nfc_card_id, fingerprint, active]));
+    });
+  }).catch(function (error) { notify('voterNotice', error.message, 'bad'); });
+});
+
+/* ── Candidate registration ───────────────────────────────────────────── */
+document.getElementById('addCandidate').addEventListener('click', function () {
+  Promise.all([
+    readFileAsBase64(document.getElementById('candPhoto')),
+    readFileAsBase64(document.getElementById('candSymbol'))
+  ]).then(function (files) {
+    return post('/admin/data/add-candidate', {
+      name: document.getElementById('candName').value,
+      party: document.getElementById('candParty').value,
+      mobileNumber: document.getElementById('candMobile').value,
+      dateOfBirth: document.getElementById('candDob').value,
+      electionId: document.getElementById('candElection').value,
+      stateId: document.getElementById('candState').value,
+      constituencyId: document.getElementById('candConstituency').value,
+      photoBase64: files[0],
+      symbolBase64: files[1]
+    });
+  }).then(function (result) {
+    if (result.success) {
+      notifyWithId('candidateNotice', result.message, 'ok', 'Candidate ID', result.candidateId);
+      document.getElementById('candName').value = '';
+      document.getElementById('candParty').value = '';
+      document.getElementById('candMobile').value = '';
+      document.getElementById('candDob').value = '';
+      document.getElementById('candPhoto').value = '';
+      document.getElementById('candSymbol').value = '';
+    } else {
+      notify('candidateNotice', result.message, 'bad');
+    }
+  }).catch(function (error) { notify('candidateNotice', error.message, 'bad'); });
+});
+
+document.getElementById('loadCandidates').addEventListener('click', function () {
+  var electionId = document.getElementById('candElection').value;
+  var constituencyId = document.getElementById('candConstituency').value;
+  if (!electionId || !constituencyId) {
+    notify('candidateNotice', 'Choose an election and a constituency first.', 'bad');
+    return;
+  }
+  api('/admin/data/candidates?electionId=' + encodeURIComponent(electionId)
+      + '&constituencyId=' + encodeURIComponent(constituencyId))
+    .then(function (list) {
+      var body = document.getElementById('candidateRows');
+      clearChildren(body);
+      (list || []).forEach(function (candidate, index) {
+        body.appendChild(row([{ html: String(index + 1), cls: 'num' },
+          candidate.name, candidate.party, formatAge(candidate.age), candidate.mobile_number || '—']));
+      });
+      if (!list || !list.length) {
+        notify('candidateNotice', 'No candidates on this ballot yet.', null);
+      }
+    })
+    .catch(function (error) { notify('candidateNotice', error.message, 'bad'); });
+});
+
+/* ── Startup ──────────────────────────────────────────────────────────── */
+(function capDobInputsToToday() {
+  var today = new Date().toISOString().slice(0, 10);
+  ['voterDob', 'candDob'].forEach(function (id) {
+    document.getElementById(id).setAttribute('max', today);
+  });
+})();
+
+api('/auth/csrf')
+  .then(loadIdentity)
+  .then(loadElections)
+  .then(loadMachines)
+  .then(loadStates)
+  .then(function () {
+    refreshResults('pm');
+    refreshResults('cm');
+    applyAutoRefresh('pm');
+    applyAutoRefresh('cm');
+    loadCmGateElections();
+    loadCmOpenStates();
+  })
+  .catch(function (error) {
+    notify('pollingNotice', error.message, 'bad');
+  });
+</script>
+</body>
+</html>
