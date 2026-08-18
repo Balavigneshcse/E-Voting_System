@@ -1,30 +1,53 @@
-# Maven build output
+# =====================
+# Maven Build Output
+# =====================
 target/
 *.class
 *.jar
 *.war
+*.ear
 
-# IDE files
+# =====================
+# IDE Files
+# =====================
 .idea/
 *.iml
 *.iws
 *.ipr
 .vscode/
+*.swp
 
-# OS files
+# =====================
+# OS Files
+# =====================
 .DS_Store
 Thumbs.db
+Desktop.ini
 
-# Logs
+# =====================
+# Logs & Runtime
+# =====================
 *.log
+logs/
 
-# Environment / secrets
-*.env
+# =====================
+# Environment / Secrets
+# =====================
+.env
 .env.*
+!.env.example
 
-# Data files (local only)
+# =====================
+# Local Data / Runtime Files
+# =====================
 evoting-data/
 .data/
+*.dat
 
-# Excel exports
+# =====================
+# Misc
+# =====================
 *.xlsx
+AUDIT_NOTES.md
+HANDOVER.md
+verify-env.ps1

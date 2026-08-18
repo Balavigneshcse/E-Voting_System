@@ -1,5 +1,8 @@
-# Tell GitHub Linguist to ignore generated/vendor files
+# Tell GitHub Linguist to exclude generated/vendor/data files from language stats
 target/ linguist-generated=true
 *.class linguist-generated=true
 evoting-data/ linguist-vendored=true
 .data/ linguist-vendored=true
+
+# SQL migrations are config/data, not primary language
+*.sql linguist-detectable=false
